@@ -1,5 +1,6 @@
 package de.ionnetwork.client.mixin;
 
+import de.ionnetwork.client.IonBrand;
 import de.ionnetwork.client.gui.IonServerData;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
@@ -32,14 +33,17 @@ public abstract class ServerListMixin {
 
     @Inject(method = "loadServerList", at = @At("RETURN"))
     private void ionclient$pinAfterLoad(CallbackInfo ci) {
-        servers.removeIf(data -> data instanceof IonServerData);
+        // The pinned entry must be the only ION entry: drop the player's own copies of the
+        // server (and any stray pinned entry), whichever way the address was written. The
+        // next save writes the list back without them.
+        servers.removeIf(data -> data instanceof IonServerData || IonBrand.isIonAddress(data.serverIP));
         ionclient$pinned = new IonServerData();
         servers.add(0, ionclient$pinned);
     }
 
     @Inject(method = "saveServerList", at = @At("HEAD"))
     private void ionclient$unpinBeforeSave(CallbackInfo ci) {
-        servers.removeIf(data -> data instanceof IonServerData);
+        servers.removeIf(data -> data instanceof IonServerData || IonBrand.isIonAddress(data.serverIP));
     }
 
     @Inject(method = "saveServerList", at = @At("RETURN"))

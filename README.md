@@ -6,7 +6,9 @@ The official ION Network client mod. It does three things:
   network's look (the website's greys and periwinkle, the logo gradient on "ION" and a left-edge
   stripe, the live MOTD and player count), while staying a plain Minecraft list entry. The entry
   is never written to `servers.dat`: it can be joined, but not edited, deleted or moved, and the
-  player's own servers keep their order.
+  player's own servers keep their order. Any ION entries the player had saved themselves (any
+  spelling of the address, with or without a port, any subdomain) are dropped so the pinned
+  entry is always the only one.
 - **Shows the player's ION coins** in the main menu's top-right corner (a coin and the number,
   "ION Coins" on hover). The balance comes from the public ION stats API for the logged-in
   account's UUID, refreshes every five minutes, and the display stays hidden when the account

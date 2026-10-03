@@ -24,6 +24,39 @@ public final class IonBrand {
     public static final String DISCORD_INVITE = "https://discord.gg/rNP4Qfvj9B";
     public static final String TAGLINE = "Bowbash • CrystalHunt • Bedwars • PirateCraft • IONJumps";
 
+    /**
+     * Whether a saved server address points at ION Network, however the player typed it:
+     * any case, with or without a port, and any subdomain of the network's domains.
+     *
+     * <p>Used to drop the player's own ION entries from the list, so the pinned entry is the
+     * only one. Without this, everyone who had already saved the server would see it twice.
+     */
+    public static boolean isIonAddress(String address) {
+        if (address == null) {
+            return false;
+        }
+        String host = address.trim().toLowerCase(java.util.Locale.ROOT);
+        if (host.isEmpty()) {
+            return false;
+        }
+        int colon = host.lastIndexOf(':');
+        if (colon > 0 && host.indexOf(':') == colon) {
+            host = host.substring(0, colon);
+        }
+        while (host.endsWith(".")) {
+            host = host.substring(0, host.length() - 1);
+        }
+        for (String domain : ION_DOMAINS) {
+            if (host.equals(domain) || host.endsWith("." + domain)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** The domains the network is reachable under. */
+    private static final String[] ION_DOMAINS = {"ion-network.de", "ionnetwork.de", "ion-network.net", "ionnet.work"};
+
     // ---- website theme tokens (ARGB) ------------------------------------------------------
 
     /** {@code --color-ionGrayer}: the page background. */
