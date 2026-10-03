@@ -6,6 +6,7 @@
   "mixins": [],
   "client": [
     "DevAutoTestMixin",
+    "GuiMainMenuMixin",
     "GuiMultiplayerMixin",
     "ServerListMixin",
     "ServerSelectionListMixin"

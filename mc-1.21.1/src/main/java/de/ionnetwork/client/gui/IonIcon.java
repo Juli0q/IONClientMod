@@ -8,38 +8,54 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * The ION server icon, registered straight from the jar.
+ * The mod's textures, registered straight from the jar.
  *
  * <p>Going through the resource manager would need Fabric API on Fabric (vanilla's resource
- * manager does not look inside mod jars there), so the texture is read from the classpath and
+ * manager does not look inside mod jars there), so each texture is read from the classpath and
  * handed to the texture manager directly. That works identically on every loader.
  */
 public final class IonIcon {
 
-    public static final ResourceLocation LOCATION = ResourceLocation.fromNamespaceAndPath(IonClient.MOD_ID, "server_icon");
-    private static final String PATH = "/assets/ionclient/textures/gui/server_icon.png";
-    private static boolean registered;
+    public static final ResourceLocation SERVER_ICON = ResourceLocation.fromNamespaceAndPath(IonClient.MOD_ID, "server_icon");
+    public static final ResourceLocation COIN = ResourceLocation.fromNamespaceAndPath(IonClient.MOD_ID, "coin");
+    /** Kept for the server entry, which predates the second texture. */
+    public static final ResourceLocation LOCATION = SERVER_ICON;
+
+    private static final Set<ResourceLocation> REGISTERED = new HashSet<>();
+    private static final Set<ResourceLocation> FAILED = new HashSet<>();
 
     private IonIcon() {
     }
 
-    /** Registers the texture on first use. Returns false if the image could not be read. */
     public static boolean ensureRegistered() {
-        if (registered) {
+        return ensureRegistered(SERVER_ICON);
+    }
+
+    /** Registers the texture on first use. Returns false if the image could not be read. */
+    public static boolean ensureRegistered(ResourceLocation location) {
+        if (REGISTERED.contains(location)) {
             return true;
         }
-        try (InputStream stream = IonIcon.class.getResourceAsStream(PATH)) {
+        if (FAILED.contains(location)) {
+            return false;
+        }
+        String path = "/assets/ionclient/textures/gui/" + location.getPath() + ".png";
+        try (InputStream stream = IonIcon.class.getResourceAsStream(path)) {
             if (stream == null) {
-                throw new IOException("missing " + PATH);
+                throw new IOException("missing " + path);
             }
             NativeImage image = NativeImage.read(stream);
-            Minecraft.getInstance().getTextureManager().register(LOCATION, new DynamicTexture(image));
-            registered = true;
+            Minecraft.getInstance().getTextureManager().register(location, new DynamicTexture(image));
+            REGISTERED.add(location);
+            return true;
         } catch (IOException e) {
-            IonClient.LOGGER.error("Could not load the ION server icon", e);
+            IonClient.LOGGER.error("Could not load texture {}", path, e);
+            FAILED.add(location);
+            return false;
         }
-        return registered;
     }
 }

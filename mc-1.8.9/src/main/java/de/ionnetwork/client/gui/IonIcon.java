@@ -9,35 +9,51 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * The ION server icon, registered straight from the jar so it does not depend on how the
- * loader exposes mod resources.
+ * The mod's textures, registered straight from the jar so they do not depend on how the loader
+ * exposes mod resources.
  */
 public final class IonIcon {
 
-    public static final ResourceLocation LOCATION = new ResourceLocation(IonClient.MOD_ID, "server_icon");
-    private static final String PATH = "/assets/ionclient/textures/gui/server_icon.png";
-    private static boolean registered;
+    public static final ResourceLocation SERVER_ICON = new ResourceLocation(IonClient.MOD_ID, "server_icon");
+    public static final ResourceLocation COIN = new ResourceLocation(IonClient.MOD_ID, "coin");
+    /** Kept for the server entry, which predates the second texture. */
+    public static final ResourceLocation LOCATION = SERVER_ICON;
+
+    private static final Set<ResourceLocation> REGISTERED = new HashSet<>();
+    private static final Set<ResourceLocation> FAILED = new HashSet<>();
 
     private IonIcon() {
     }
 
-    /** Registers the texture on first use. Returns false if the image could not be read. */
     public static boolean ensureRegistered() {
-        if (registered) {
+        return ensureRegistered(SERVER_ICON);
+    }
+
+    /** Registers the texture on first use. Returns false if the image could not be read. */
+    public static boolean ensureRegistered(ResourceLocation location) {
+        if (REGISTERED.contains(location)) {
             return true;
         }
-        try (InputStream stream = IonIcon.class.getResourceAsStream(PATH)) {
+        if (FAILED.contains(location)) {
+            return false;
+        }
+        String path = "/assets/ionclient/textures/gui/" + location.getResourcePath() + ".png";
+        try (InputStream stream = IonIcon.class.getResourceAsStream(path)) {
             if (stream == null) {
-                throw new IOException("missing " + PATH);
+                throw new IOException("missing " + path);
             }
             BufferedImage image = ImageIO.read(stream);
-            Minecraft.getMinecraft().getTextureManager().loadTexture(LOCATION, new DynamicTexture(image));
-            registered = true;
+            Minecraft.getMinecraft().getTextureManager().loadTexture(location, new DynamicTexture(image));
+            REGISTERED.add(location);
+            return true;
         } catch (IOException e) {
-            IonClient.LOGGER.error("Could not load the ION server icon", e);
+            IonClient.LOGGER.error("Could not load texture {}", path, e);
+            FAILED.add(location);
+            return false;
         }
-        return registered;
     }
 }

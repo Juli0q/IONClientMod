@@ -1,10 +1,16 @@
 # ION Client
 
-The official ION Network client mod. For now it does one thing: it pins the ION Network server
-to the top of the multiplayer server list, drawn in the network's look (the website's greys and
-periwinkle, the logo gradient on "ION" and a left-edge stripe, the live MOTD and player count),
-while staying a plain Minecraft list entry. The entry is never written to `servers.dat`: it can
-be joined, but not edited, deleted or moved, and the player's own servers keep their order.
+The official ION Network client mod. It does two things:
+
+- **Pins the ION Network server** to the top of the multiplayer server list, drawn in the
+  network's look (the website's greys and periwinkle, the logo gradient on "ION" and a left-edge
+  stripe, the live MOTD and player count), while staying a plain Minecraft list entry. The entry
+  is never written to `servers.dat`: it can be joined, but not edited, deleted or moved, and the
+  player's own servers keep their order.
+- **Shows the player's ION coins** in the main menu's top-right corner (a coin and the number,
+  "ION Coins" on hover). The balance comes from the public ION stats API for the logged-in
+  account's UUID, refreshes every five minutes, and the display stays hidden when the account
+  has no ION profile or the API cannot be reached.
 
 | Minecraft | Loader   | Jar                                   |
 |-----------|----------|---------------------------------------|
@@ -15,6 +21,17 @@ be joined, but not edited, deleted or moved, and the player's own servers keep t
 
 No other mods are required on any loader (not even Fabric API: the icon is loaded from the jar
 directly instead of through the resource manager).
+
+## The coins API
+
+The main menu asks `GET <api>/api/stats/player/<uuid>/coins` (answer `{"uuid", "coins"}`, 404
+for an unknown player), a public read-only route added to the Strapi backend
+(`API-IONNNetworkNewWebsite`, `src/api/stats`). Until that route is deployed, and on any 404,
+the mod falls back to the public player search (`/api/stats/players/search?q=<name>`) and picks
+the row with the player's UUID. Nothing but the player's own UUID and name is sent.
+
+The base URL defaults to `https://beta-api.ion-network.de` and can be changed with
+`-Dionclient.api=https://...`.
 
 ## Building
 
@@ -65,9 +82,12 @@ pinned entry is selected.
 ./gradlew -p mc-1.21.1 :fabric:runClient    # :neoforge:runClient, :forge:runClient
 ```
 
-With `IONCLIENT_AUTOTEST=1` in the environment the client opens the multiplayer screen on its
-own, waits for the ping, writes `screenshots/ionclient-autotest.png` into the run directory and
-quits. That is how the entry's look is checked without a person at the keyboard.
+With `IONCLIENT_AUTOTEST=1` in the environment the client saves
+`screenshots/ionclient-autotest-title.png` from the main menu, then opens the multiplayer screen
+on its own, waits for the ping, writes `screenshots/ionclient-autotest.png` and quits. That is
+how both displays are checked without a person at the keyboard. Dev sessions are offline and
+have no ION profile, so `IONCLIENT_DEV_UUID` and `IONCLIENT_DEV_NAME` point the coin lookup at
+a real account.
 
 The Forge 1.21.1 dev run does not launch under Architectury Loom 1.11 (FML's
 `ImmediateWindowHandler` cannot find the `minecraft` module in the userdev game layer, with or

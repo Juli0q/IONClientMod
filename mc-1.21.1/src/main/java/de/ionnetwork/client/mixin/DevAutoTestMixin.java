@@ -47,6 +47,9 @@ public abstract class DevAutoTestMixin {
     private int ionclient$ticksOnScreen;
 
     @Unique
+    private int ionclient$ticksOnTitle;
+
+    @Unique
     private boolean ionclient$opened;
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -55,9 +58,10 @@ public abstract class DevAutoTestMixin {
             return;
         }
         if (!ionclient$opened) {
-            if (screen instanceof TitleScreen) {
+            if (screen instanceof TitleScreen && ++ionclient$ticksOnTitle == 80) {
+                IonClient.LOGGER.info("[autotest] saving title screenshot, opening the multiplayer screen");
+                Screenshot.grab(gameDirectory, "ionclient-autotest-title.png", getMainRenderTarget(), message -> IonClient.LOGGER.info("[autotest] {}", message.getString()));
                 ionclient$opened = true;
-                IonClient.LOGGER.info("[autotest] opening the multiplayer screen");
                 setScreen(new JoinMultiplayerScreen(screen));
             }
             return;
