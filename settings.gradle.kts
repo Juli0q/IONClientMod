@@ -17,6 +17,7 @@ plugins {
 rootProject.name = "IONClientMod"
 
 include("mc-1.8.9")
+include("mc-1.8.9-lwjgl3")
 
 // Architectury Loom (1.21.1) and unimined (1.8.9) cannot share one buildscript classpath, so the
 // 1.21.1 targets are a separate build composed into this one.

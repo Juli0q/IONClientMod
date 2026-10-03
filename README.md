@@ -21,6 +21,7 @@ The official ION Network client mod. It does three things:
 | Minecraft | Loader   | Jar                                   |
 |-----------|----------|---------------------------------------|
 | 1.8.9     | Forge    | `ionclient-<version>-forge-1.8.9.jar`    |
+| 1.8.9     | Forge    | `ionclient-lwjgl3-<version>-forge-1.8.9.jar` (optional, Linux) |
 | 1.21.1    | Fabric   | `ionclient-<version>-fabric-1.21.1.jar`  |
 | 1.21.1    | NeoForge | `ionclient-<version>-neoforge-1.21.1.jar`|
 | 1.21.1    | Forge    | `ionclient-<version>-forge-1.21.1.jar`   |
@@ -49,7 +50,7 @@ export JAVA_HOME=~/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2   # or any JDK
 ./gradlew buildAll
 ```
 
-`buildAll` builds every target and collects the four jars in `build/libs/`. The targets can also
+`buildAll` builds every target and collects the five jars in `build/libs/`. The targets can also
 be built one at a time:
 
 ```bash
@@ -62,6 +63,7 @@ be built one at a time:
 ```
 common/      brand constants and the entry's layout rules; pure Java 8, compiled into every target
 mc-1.8.9/    unimined build: src/main (MCP names: the entry, its mixins) + src/forge (the @Mod)
+mc-1.8.9-lwjgl3/  plain Java build of the optional LWJGL3 coremod jar (no Minecraft classes)
 mc-1.21.1/   Architectury Loom build, included from the root: src/main (mojmap: the entry, its
              mixins) + fabric/, neoforge/, forge/ (one entrypoint and metadata file each)
 ```
