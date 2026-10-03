@@ -1,6 +1,6 @@
 # ION Client
 
-The official ION Network client mod. It does two things:
+The official ION Network client mod. It does three things:
 
 - **Pins the ION Network server** to the top of the multiplayer server list, drawn in the
   network's look (the website's greys and periwinkle, the logo gradient on "ION" and a left-edge
@@ -11,6 +11,10 @@ The official ION Network client mod. It does two things:
   "ION Coins" on hover). The balance comes from the public ION stats API for the logged-in
   account's UUID, refreshes every five minutes, and the display stays hidden when the account
   has no ION profile or the API cannot be reached.
+- **Replaces the main menu panorama** with shots of the ION lobby (two by day, three by night,
+  rendered with Complementary Reimagined + Euphoria Patches). One set is picked at random per
+  launch. 1.21.1 ships 1024px faces like vanilla; 1.8.9 blurs its panorama heavily, so it gets
+  512px faces to keep the jar small.
 
 | Minecraft | Loader   | Jar                                   |
 |-----------|----------|---------------------------------------|
@@ -88,6 +92,16 @@ on its own, waits for the ping, writes `screenshots/ionclient-autotest.png` and 
 how both displays are checked without a person at the keyboard. Dev sessions are offline and
 have no ION profile, so `IONCLIENT_DEV_UUID` and `IONCLIENT_DEV_NAME` point the coin lookup at
 a real account.
+
+### Capturing panoramas
+
+With `IONCLIENT_PANORAMA=1` set, or a file named `ionclient-panorama` in the game directory
+(handy in a launcher instance), pressing F6 in-world hides the HUD, sets FOV 90, turns the camera
+through the six cube faces starting from the current view direction (a second per face, so
+shader TAA and exposure settle) and saves `panoramas/<time>/panorama_0..5.png`. It captures the
+normal frame rather than using vanilla's offscreen panorama grabber, which Sodium and Iris leave
+empty. New sets go under `assets/ionclient/textures/gui/title/background/<set>/` in both
+versions and into `IonPanoramas.SETS`.
 
 The Forge 1.21.1 dev run does not launch under Architectury Loom 1.11 (FML's
 `ImmediateWindowHandler` cannot find the `minecraft` module in the userdev game layer, with or
