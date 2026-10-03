@@ -8,6 +8,7 @@
     "DevAutoTestMixin",
     "GuiMainMenuMixin",
     "GuiMultiplayerMixin",
+    "ScaledResolutionMixin",
     "ServerListMixin",
     "ServerSelectionListMixin"
   ],
