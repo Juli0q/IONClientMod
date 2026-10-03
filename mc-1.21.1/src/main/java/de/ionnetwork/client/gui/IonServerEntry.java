@@ -1,6 +1,8 @@
 package de.ionnetwork.client.gui;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import de.ionnetwork.client.IonBrand;
+import de.ionnetwork.client.IonClient;
 import de.ionnetwork.client.IonEntryStyle;
 import de.ionnetwork.client.IonEntryStyle.Status;
 import net.minecraft.ChatFormatting;
@@ -8,6 +10,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.FaviconTexture;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.multiplayer.ServerData;
@@ -18,6 +21,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.Util;
 
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,7 +30,7 @@ import java.util.concurrent.Executors;
  * The ION Network row in the multiplayer screen.
  *
  * <p>Extends the vanilla entry so the screen's join logic treats it as a normal saved server,
- * but draws itself in the website's look: a dark card with a gradient stripe, the ION icon, the
+ * but draws itself in the website's look: a dark card with a gradient stripe, the server's own icon, the
  * name with an OFFICIAL pill, the live MOTD, and the address with a breathing status dot.
  */
 public final class IonServerEntry extends ServerSelectionList.OnlineServerEntry {
@@ -58,6 +62,9 @@ public final class IonServerEntry extends ServerSelectionList.OnlineServerEntry 
     private final JoinMultiplayerScreen screen;
     private final Minecraft minecraft;
     private final ServerData data;
+    /** The favicon from the ping. Keyed apart from vanilla's so the parent's own copy never clashes. */
+    private final FaviconTexture icon;
+    private byte[] lastIconBytes;
     private long lastClick;
 
     public IonServerEntry(ServerSelectionList list, JoinMultiplayerScreen screen, ServerData data) {
@@ -66,6 +73,7 @@ public final class IonServerEntry extends ServerSelectionList.OnlineServerEntry 
         this.screen = screen;
         this.data = data;
         this.minecraft = Minecraft.getInstance();
+        this.icon = FaviconTexture.forServer(minecraft.getTextureManager(), "ionclient/" + data.ip);
     }
 
     @Override
@@ -97,11 +105,18 @@ public final class IonServerEntry extends ServerSelectionList.OnlineServerEntry 
             graphics.fill(cardLeft, segTop, cardLeft + IonEntryStyle.STRIPE_WIDTH, segBottom, IonBrand.gradientAt(i / (float) (steps - 1)));
         }
 
-        // Icon.
-        int iconX = left + IonEntryStyle.STRIPE_WIDTH + IonEntryStyle.GAP;
-        if (IonIcon.ensureRegistered()) {
-            graphics.blit(IonIcon.LOCATION, iconX, top, 0.0F, 0.0F, IonEntryStyle.ICON_SIZE, IonEntryStyle.ICON_SIZE, 64, 64);
+        // Icon: the favicon the server sends with its ping, or vanilla's unknown-server
+        // placeholder until it arrives.
+        byte[] iconBytes = data.getIconBytes();
+        if (!Arrays.equals(iconBytes, lastIconBytes)) {
+            if (uploadIcon(iconBytes)) {
+                lastIconBytes = iconBytes;
+            } else {
+                data.setIconBytes(null);
+            }
         }
+        int iconX = left + IonEntryStyle.STRIPE_WIDTH + IonEntryStyle.GAP;
+        drawIcon(graphics, iconX, top, icon.textureLocation());
 
         // Line 1: "ION" in the logo gradient, "Network" in white; player count and ping on the right.
         int textX = left + IonEntryStyle.TEXT_X;
@@ -151,6 +166,21 @@ public final class IonServerEntry extends ServerSelectionList.OnlineServerEntry 
         } else if (!population.isEmpty() && relX >= width - populationWidth - 15 - 2 && relX <= width - 15 - 2 && relY >= 0 && relY <= 8
                 && data.playerList != null && !data.playerList.isEmpty()) {
             screen.setTooltipForNextRenderPass(data.playerList.stream().map(Component::getVisualOrderText).toList());
+        }
+    }
+
+    /** Mirrors vanilla's private {@code uploadServerIcon}. Returns false if the bytes are not a valid icon. */
+    private boolean uploadIcon(byte[] bytes) {
+        if (bytes == null) {
+            icon.clear();
+            return true;
+        }
+        try {
+            icon.upload(NativeImage.read(bytes));
+            return true;
+        } catch (Throwable e) {
+            IonClient.LOGGER.error("Invalid icon for {}", data.ip, e);
+            return false;
         }
     }
 
@@ -209,6 +239,12 @@ public final class IonServerEntry extends ServerSelectionList.OnlineServerEntry 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // The pinned entry is never reordered, so Shift+Up/Down do nothing here.
         return false;
+    }
+
+    @Override
+    public void close() {
+        icon.close();
+        super.close();
     }
 
     @Override

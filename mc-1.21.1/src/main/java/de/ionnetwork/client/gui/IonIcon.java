@@ -20,19 +20,12 @@ import java.util.Set;
  */
 public final class IonIcon {
 
-    public static final ResourceLocation SERVER_ICON = ResourceLocation.fromNamespaceAndPath(IonClient.MOD_ID, "server_icon");
     public static final ResourceLocation COIN = ResourceLocation.fromNamespaceAndPath(IonClient.MOD_ID, "coin");
-    /** Kept for the server entry, which predates the second texture. */
-    public static final ResourceLocation LOCATION = SERVER_ICON;
 
     private static final Set<ResourceLocation> REGISTERED = new HashSet<>();
     private static final Set<ResourceLocation> FAILED = new HashSet<>();
 
     private IonIcon() {
-    }
-
-    public static boolean ensureRegistered() {
-        return ensureRegistered(SERVER_ICON);
     }
 
     /** Registers the texture on first use. Returns false if the image could not be read. */

@@ -1,6 +1,7 @@
 package de.ionnetwork.client.gui;
 
 import de.ionnetwork.client.IonBrand;
+import de.ionnetwork.client.IonClient;
 import de.ionnetwork.client.IonEntryStyle;
 import de.ionnetwork.client.IonEntryStyle.Status;
 import net.minecraft.client.Minecraft;
@@ -10,11 +11,19 @@ import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.ServerListEntryNormal;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.ITextureObject;
+import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -23,11 +32,13 @@ import java.util.concurrent.Executors;
  *
  * <p>Extends the vanilla entry so the screen's join logic ({@code connectToSelected}) and the
  * Forge server-compatibility checks treat it as a normal saved server, but draws itself in the
- * website's look: a dark card with a gradient stripe, the ION icon, the name with an OFFICIAL
+ * website's look: a dark card with a gradient stripe, the server's own icon, the name with an OFFICIAL
  * pill, the live MOTD, and the address with a breathing status dot.
  */
 public final class IonServerEntry extends ServerListEntryNormal {
 
+    private static final ResourceLocation UNKNOWN_SERVER = new ResourceLocation("textures/misc/unknown_server.png");
+    private static final ResourceLocation ICON_LOCATION = new ResourceLocation(IonClient.MOD_ID, "servers/ion/icon");
     private static final ExecutorService PINGER = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "ION Server Pinger");
         thread.setDaemon(true);
@@ -37,6 +48,8 @@ public final class IonServerEntry extends ServerListEntryNormal {
     private final GuiMultiplayer screen;
     private final Minecraft mc;
     private final ServerData data;
+    private DynamicTexture icon;
+    private String lastIconData;
     private long lastClick;
 
     public IonServerEntry(GuiMultiplayer screen, ServerData data) {
@@ -75,15 +88,16 @@ public final class IonServerEntry extends ServerListEntryNormal {
             Gui.drawRect(left, segTop, left + IonEntryStyle.STRIPE_WIDTH, segBottom, IonBrand.gradientAt(i / (float) (steps - 1)));
         }
 
-        // Icon.
-        int iconX = x + IonEntryStyle.STRIPE_WIDTH + IonEntryStyle.GAP;
-        if (IonIcon.ensureRegistered()) {
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            mc.getTextureManager().bindTexture(IonIcon.LOCATION);
-            GlStateManager.enableBlend();
-            Gui.drawModalRectWithCustomSizedTexture(iconX, y, 0.0F, 0.0F, IonEntryStyle.ICON_SIZE, IonEntryStyle.ICON_SIZE, 64.0F, 64.0F);
-            GlStateManager.disableBlend();
+        // Icon: the favicon the server sends with its ping, or vanilla's unknown-server
+        // placeholder until it arrives.
+        String iconData = data.getBase64EncodedIconData();
+        if (!Objects.equals(iconData, lastIconData)) {
+            lastIconData = iconData;
+            uploadIcon(iconData);
         }
+        int iconX = x + IonEntryStyle.STRIPE_WIDTH + IonEntryStyle.GAP;
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        drawTextureAt(iconX, y, icon != null ? ICON_LOCATION : UNKNOWN_SERVER);
 
         // Line 1: "ION" in the logo gradient, "Network" in white; player count and ping on the right.
         int textX = x + IonEntryStyle.TEXT_X;
@@ -134,6 +148,42 @@ public final class IonServerEntry extends ServerListEntryNormal {
         } else if (!population.isEmpty() && relX >= listWidth - populationWidth - 15 - 2 && relX <= listWidth - 15 - 2 && relY >= 0 && relY <= 8
                 && data.playerList != null && !data.playerList.isEmpty()) {
             screen.setHoveringText(data.playerList);
+        }
+    }
+
+    /** Mirrors vanilla's private {@code prepareServerIcon}, reusing the texture across screen opens. */
+    private void uploadIcon(String base64) {
+        if (base64 == null) {
+            releaseIcon();
+            return;
+        }
+        try {
+            BufferedImage image = TextureUtil.readBufferedImage(new ByteArrayInputStream(Base64.getMimeDecoder().decode(base64)));
+            if (image == null || image.getWidth() != 64 || image.getHeight() != 64) {
+                throw new IOException("Icon must be a 64x64 PNG");
+            }
+            if (icon == null) {
+                ITextureObject existing = mc.getTextureManager().getTexture(ICON_LOCATION);
+                if (existing instanceof DynamicTexture) {
+                    icon = (DynamicTexture) existing;
+                } else {
+                    icon = new DynamicTexture(64, 64);
+                    mc.getTextureManager().loadTexture(ICON_LOCATION, icon);
+                }
+            }
+            image.getRGB(0, 0, 64, 64, icon.getTextureData(), 0, 64);
+            icon.updateDynamicTexture();
+        } catch (IOException | IllegalArgumentException e) {
+            IonClient.LOGGER.error("Invalid icon for {}", data.serverIP, e);
+            data.setBase64EncodedIconData(null);
+            releaseIcon();
+        }
+    }
+
+    private void releaseIcon() {
+        if (icon != null) {
+            mc.getTextureManager().deleteTexture(ICON_LOCATION);
+            icon = null;
         }
     }
 

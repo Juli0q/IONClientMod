@@ -14,8 +14,21 @@ import net.minecraft.client.multiplayer.ServerData;
  */
 public final class IonServerData extends ServerData {
 
+    /**
+     * The last favicon the server sent. Vanilla keeps icons in servers.dat, which the pinned
+     * entry never reaches, so it is remembered here to avoid a placeholder on every screen open.
+     */
+    private static byte[] lastIcon;
+
     public IonServerData() {
         super(IonBrand.SERVER_NAME, IonBrand.SERVER_ADDRESS, ServerData.Type.OTHER);
         setResourcePackStatus(ServerData.ServerPackStatus.PROMPT);
+        super.setIconBytes(lastIcon);
+    }
+
+    @Override
+    public void setIconBytes(byte[] icon) {
+        super.setIconBytes(icon);
+        lastIcon = icon;
     }
 }

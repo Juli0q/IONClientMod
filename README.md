@@ -25,7 +25,7 @@ The official ION Network client mod. It does three things:
 | 1.21.1    | NeoForge | `ionclient-<version>-neoforge-1.21.1.jar`|
 | 1.21.1    | Forge    | `ionclient-<version>-forge-1.21.1.jar`   |
 
-No other mods are required on any loader (not even Fabric API: the icon is loaded from the jar
+No other mods are required on any loader (not even Fabric API: the coin texture is loaded from the jar
 directly instead of through the resource manager).
 
 ## The coins API
