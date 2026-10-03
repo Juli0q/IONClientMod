@@ -35,14 +35,14 @@ subprojects {
 
 // `./gradlew buildAll` produces every jar: Forge 1.8.9 from this build, Fabric/NeoForge/Forge 1.21.1
 // from the included build. The jars are collected into build/libs at the repository root.
-val collectJars by tasks.registering(Copy::class) {
+val collectJars by tasks.registering(Sync::class) {
     val included = gradle.includedBuild("mc-1.21.1")
     dependsOn(":mc-1.8.9:build")
     listOf("fabric", "neoforge", "forge").forEach { dependsOn(included.task(":$it:build")) }
 
     from(project(":mc-1.8.9").layout.buildDirectory.dir("libs"))
     listOf("fabric", "neoforge", "forge").forEach { from(included.projectDir.resolve("$it/build/libs")) }
-    include("*-${project.version}-*.jar")
+    listOf("fabric", "neoforge", "forge").forEach { include("*-${project.version}-$it-*.jar") }
     exclude("*-dev.jar", "*-sources.jar")
     into(layout.buildDirectory.dir("libs"))
 }
