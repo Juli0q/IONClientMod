@@ -1,6 +1,6 @@
 modLoader = "javafml"
 loaderVersion = "[52,)"
-license = "All Rights Reserved"
+license = "GPL-3.0-only"
 issueTrackerURL = "${mod_homepage}"
 clientSideOnly = true
 

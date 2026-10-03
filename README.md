@@ -109,3 +109,9 @@ The Forge 1.21.1 dev run does not launch under Architectury Loom 1.11 (FML's
 `ImmediateWindowHandler` cannot find the `minecraft` module in the userdev game layer, with or
 without the early window). The Forge 1.21.1 jar is therefore compile-verified only; its entry
 code is the same as the Fabric and NeoForge jars, which were run.
+
+## License
+
+ION Client is free software, licensed under the [GNU General Public License v3.0](LICENSE)
+(GPL-3.0-only). You may use, change and redistribute it, but anything you distribute that is
+based on it must be released under the same license, with its source code.

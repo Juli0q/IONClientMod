@@ -8,7 +8,7 @@
   "contact": {
     "homepage": "${mod_homepage}"
   },
-  "license": "All-Rights-Reserved",
+  "license": "GPL-3.0-only",
   "icon": "assets/ionclient/icon.png",
   "environment": "client",
   "entrypoints": {
