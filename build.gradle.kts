@@ -42,7 +42,7 @@ val collectJars by tasks.registering(Copy::class) {
 
     from(project(":mc-1.8.9").layout.buildDirectory.dir("libs"))
     listOf("fabric", "neoforge", "forge").forEach { from(included.projectDir.resolve("$it/build/libs")) }
-    include("*.jar")
+    include("*-${project.version}-*.jar")
     exclude("*-dev.jar", "*-sources.jar")
     into(layout.buildDirectory.dir("libs"))
 }
