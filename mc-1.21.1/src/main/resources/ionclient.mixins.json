@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "de.ionnetwork.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "DevAutoTestMixin",
+    "JoinMultiplayerScreenMixin",
+    "ServerListMixin",
+    "ServerSelectionListMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

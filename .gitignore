@@ -1,0 +1,10 @@
+.gradle/
+build/
+run/
+*/run/
+.idea/
+*.iml
+.vscode/
+.unimined/
+out/
+*.hprof
