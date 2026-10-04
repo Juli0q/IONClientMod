@@ -82,6 +82,46 @@ and ViaVersion pass it through unchanged. The encoder is `common/.../IonClientHe
 side is `IonClientContract` in IONPlugins' `core/utilities`, read by IONCore (Spigot), IONCore-Velocity
 and the Minestom nodes into `ClientProfiles`.
 
+## Modern textures (1.8.9)
+
+The 1.8.9 jar builds `resourcepacks/ION Modern Textures.zip`, the block and item textures of
+Minecraft 26.3 renamed to their 1.8.9 paths, which the player can turn on in the vanilla Resource
+Packs screen. No Mojang texture ships in the ION jar: they are taken from Mojang's own client jar on
+the player's machine. At the start of every launch a background thread checks the pack's stamp
+(source version, converter revision, table hash, stored as the zip comment) and only rebuilds it
+when that changed; the build takes a few seconds.
+
+The client jar (41 MB) is taken from, in order: `-Dionclient.modernTextures.jar=<path>`,
+`<gameDir>/ionclient/modern-textures/client-26.3.jar`, `<gameDir>/versions/26.3/26.3.jar`, and only
+then downloaded from `piston-data.mojang.com` into the second location. Every copy is checked
+against the pinned SHA-1. `-Dionclient.modernTextures=false` turns the feature off.
+
+`mc-1.8.9/src/main/resources/assets/ionclient/modern_textures/mapping.txt` says where each 1.8.9
+texture comes from (renames since 1.13, the clock and compass frames stitched back into strips,
+water tinted blue). Textures it doesn't list are taken by the same name. Beds, banners, spawn eggs
+and redstone dust stay vanilla, as do the GUI, particles and entities.
+
+**Precaching from the ION Launcher.** Put the jar where the mod looks for it, before the game starts.
+Helios already does this for a `File` module in the server's `modules`, with no launcher changes
+(`path` is relative to the instance directory, which is the game directory):
+
+```json
+{
+    "id": "net.minecraft:client-textures:26.3",
+    "name": "Minecraft 26.3 textures (for ION Modern Textures)",
+    "type": "File",
+    "artifact": {
+        "size": 41483720,
+        "MD5": "cdfae0ad6fd58d11ed5500f22abe205a",
+        "path": "ionclient/modern-textures/client-26.3.jar",
+        "url": "https://piston-data.mojang.com/v1/objects/e877b6a07acd633fb3bb475002175cec036e7b87/client.jar"
+    }
+}
+```
+
+When the pinned version changes (`ModernTextureSource`), this entry has to change with it,
+otherwise the mod ignores the precached jar and downloads the new one itself.
+
 ## The coins API
 
 The main menu asks `GET <api>/api/stats/player/<uuid>/coins` (answer `{"uuid", "coins"}`, 404

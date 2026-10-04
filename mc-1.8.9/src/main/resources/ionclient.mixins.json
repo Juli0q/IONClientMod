@@ -8,6 +8,7 @@
     "DevAutoTestMixin",
     "GuiMainMenuMixin",
     "GuiMultiplayerMixin",
+    "ModernTexturesMixin",
     "NetHandlerPlayClientMixin",
     "RenderGlobalMixin",
     "RendererLivingEntityMixin",
