@@ -3,6 +3,8 @@ package de.ionnetwork.client.gui;
 import de.ionnetwork.client.IonClient;
 import de.ionnetwork.client.IonSettings;
 import de.ionnetwork.client.IonSettingsMenu;
+import de.ionnetwork.client.textures.ModernTextures;
+import de.ionnetwork.client.textures.ModernTexturesSelection;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiConfirmOpenLink;
 import net.minecraft.client.gui.GuiScreen;
@@ -38,7 +40,7 @@ public class IonSettingsScreen extends GuiScreen {
     public void initGui() {
         buttonList.clear();
         items.clear();
-        layout = IonSettingsMenu.layout(IonSettingsMenu.sections(IonDisplayScale.get()), width, height);
+        layout = IonSettingsMenu.layout(IonSettingsMenu.sections(IonDisplayScale.get(), ModernTextures.enabled()), width, height);
         for (IonSettingsMenu.Slot slot : layout.slots) {
             GuiButton button;
             if (slot.item instanceof IonSettingsMenu.Choice) {
@@ -61,7 +63,7 @@ public class IonSettingsScreen extends GuiScreen {
             return;
         }
         if (button.id == DONE_ID) {
-            mc.displayGuiScreen(parent);
+            close();
             return;
         }
         IonSettingsMenu.Item item = items.get(button.id);
@@ -92,10 +94,16 @@ public class IonSettingsScreen extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) {
         if (keyCode == Keyboard.KEY_ESCAPE) {
-            mc.displayGuiScreen(parent);
+            close();
             return;
         }
         super.keyTyped(typedChar, keyCode);
+    }
+
+    /** Leaves the screen; a changed Modern Textures choice reloads the resources now, as Resource Packs' Done does. */
+    private void close() {
+        ModernTexturesSelection.apply(mc);
+        mc.displayGuiScreen(parent);
     }
 
     @Override

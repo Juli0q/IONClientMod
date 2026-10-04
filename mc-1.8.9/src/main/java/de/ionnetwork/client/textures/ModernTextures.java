@@ -19,7 +19,7 @@ import java.util.zip.ZipFile;
  * thread and is skipped when the pack on disk already carries this build's stamp. A pack that is
  * in use cannot be replaced on Windows, so a rebuilt one waits in the cache folder and is moved
  * into place on the next start, before Minecraft opens it. {@code -Dionclient.modernTextures=false}
- * turns all of this off.
+ * turns all of this off. Whether the pack is selected is {@link ModernTexturesSelection}'s part.
  */
 public final class ModernTextures {
 
@@ -28,11 +28,24 @@ public final class ModernTextures {
     private ModernTextures() {
     }
 
-    public static void start(File gameDir, Predicate<String> legacyExists) {
-        if ("false".equalsIgnoreCase(System.getProperty("ionclient.modernTextures"))) {
+    /** Whether this run builds the pack (and so offers the setting for it). */
+    public static boolean enabled() {
+        return !"false".equalsIgnoreCase(System.getProperty("ionclient.modernTextures"));
+    }
+
+    /** The pack's file in the game directory's resource pack folder. */
+    public static File packFile(File gameDir) {
+        return new File(new File(gameDir, "resourcepacks"), PACK_NAME);
+    }
+
+    /**
+     * @param onBuilt run on the worker thread after a newly built pack was moved into place
+     */
+    public static void start(File gameDir, Predicate<String> legacyExists, Runnable onBuilt) {
+        if (!enabled()) {
             return;
         }
-        File pack = new File(new File(gameDir, "resourcepacks"), PACK_NAME);
+        File pack = packFile(gameDir);
         File pending = new File(ModernTextureSource.cacheDir(gameDir), "pending.zip");
         if (pending.isFile()) {
             try {
@@ -44,7 +57,9 @@ public final class ModernTextures {
 
         Thread worker = new Thread(() -> {
             try {
-                update(gameDir, pack, pending, legacyExists);
+                if (update(gameDir, pack, pending, legacyExists)) {
+                    onBuilt.run();
+                }
             } catch (Throwable t) {
                 IonClient.LOGGER.warn("Could not prepare the modern texture pack", t);
             }
@@ -54,10 +69,11 @@ public final class ModernTextures {
         worker.start();
     }
 
-    private static void update(File gameDir, File pack, File pending, Predicate<String> legacyExists) throws IOException {
+    /** Returns whether a newly built pack is now in place. */
+    private static boolean update(File gameDir, File pack, File pending, Predicate<String> legacyExists) throws IOException {
         String stamp = ModernTexturePack.stamp();
         if (stamp.equals(stampOf(pack))) {
-            return;
+            return false;
         }
         long started = System.currentTimeMillis();
         File jar = ModernTextureSource.resolve(gameDir);
@@ -71,10 +87,11 @@ public final class ModernTextures {
         } catch (IOException inUse) {
             Files.move(building.toPath(), pending.toPath(), StandardCopyOption.REPLACE_EXISTING);
             IonClient.LOGGER.info("The modern texture pack is in use; the rebuilt one is installed on the next start");
-            return;
+            return false;
         }
         IonClient.LOGGER.info("Built {} from Minecraft {} ({} textures, {} ms)", PACK_NAME, ModernTextureSource.VERSION,
                 textures, System.currentTimeMillis() - started);
+        return true;
     }
 
     private static void install(File built, File pack) throws IOException {

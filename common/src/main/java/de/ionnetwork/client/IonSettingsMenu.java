@@ -140,12 +140,20 @@ public final class IonSettingsMenu {
      * @param desktopScale the desktop scale factor when the version supports matching it (1.8.9),
      *                     or {@code 0} to leave the option out; {@code 1} shows it disabled, since
      *                     only the LWJGL3 runtime reports a scaled desktop
+     * @param modernTextures whether the version builds the modern texture pack (1.8.9)
      */
-    public static List<Section> sections(double desktopScale) {
+    public static List<Section> sections(double desktopScale, boolean modernTextures) {
         List<Section> sections = new ArrayList<>();
         sections.add(new Section("Menus", panorama(), coins(), pin()));
+        List<Item> display = new ArrayList<>();
         if (desktopScale > 0) {
-            sections.add(new Section("Display", desktopScale(desktopScale)));
+            display.add(desktopScale(desktopScale));
+        }
+        if (modernTextures) {
+            display.add(modernTextures());
+        }
+        if (!display.isEmpty()) {
+            sections.add(new Section("Display", display.toArray(new Item[0])));
         }
         sections.add(new Section("Steam Deck", steamKeyboard(), chatLift()));
         sections.add(new Section(IonBrand.SERVER_NAME,
@@ -194,6 +202,12 @@ public final class IonSettingsMenu {
     private static Choice pin() {
         return toggle("Pinned Server", "Keeps " + IonBrand.SERVER_NAME + " at the top of your multiplayer server list.",
                 true, false, IonSettings::pinServer, IonSettings::setPinServer);
+    }
+
+    private static Choice modernTextures() {
+        return toggle("Modern Textures", "Swaps the block and item textures for today's Minecraft ones. It is the "
+                + "\"ION Modern Textures\" resource pack, so you can also turn it on or off in Resource Packs.",
+                true, false, IonSettings::modernTextures, IonSettings::setModernTextures);
     }
 
     private static Choice steamKeyboard() {

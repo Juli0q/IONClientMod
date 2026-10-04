@@ -41,6 +41,7 @@ options screens, with "ION" in the logo gradient and a gradient line under the h
 | ION Coins     | ON / OFF                                       | ON      |
 | Pinned Server | ON / OFF (off leaves the server list vanilla)  | ON      |
 | Desktop Scale | ON / OFF, 1.8.9 only; active under LWJGL3 on a scaled desktop | ON |
+| Modern Textures | ON / OFF, 1.8.9 only; selects the "ION Modern Textures" resource pack | ON |
 
 plus links to the website and Discord. Changes apply right away (the server list on its next
 load) and are saved to `config/ionclient.json` when the screen closes. The wording and layout
@@ -103,8 +104,9 @@ and the Minestom nodes into `ClientProfiles`.
 ## Modern textures (1.8.9)
 
 The 1.8.9 jar builds `resourcepacks/ION Modern Textures.zip`, the block and item textures of
-Minecraft 26.3 renamed to their 1.8.9 paths, which the player can turn on in the vanilla Resource
-Packs screen. No Mojang texture ships in the ION jar: they are taken from Mojang's own client jar on
+Minecraft 26.3 renamed to their 1.8.9 paths. It is selected by default, below the player's own
+packs; the "Modern Textures" setting and the vanilla Resource Packs screen both turn it on and off,
+and each shows what the other chose. No Mojang texture ships in the ION jar: they are taken from Mojang's own client jar on
 the player's machine. At the start of every launch a background thread checks the pack's stamp
 (source version, converter revision, table hash, stored as the zip comment) and only rebuilds it
 when that changed; the build takes a few seconds.

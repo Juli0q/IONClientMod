@@ -18,6 +18,7 @@
     "NetHandlerPlayClientMixin",
     "RenderGlobalMixin",
     "RendererLivingEntityMixin",
+    "ResourcePackRepositoryMixin",
     "ScaledResolutionMixin",
     "ServerListMixin",
     "ServerSelectionListMixin",

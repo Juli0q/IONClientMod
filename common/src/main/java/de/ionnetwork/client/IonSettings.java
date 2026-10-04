@@ -40,6 +40,7 @@ public final class IonSettings {
     private static volatile boolean showCoins = true;
     private static volatile boolean pinServer = true;
     private static volatile boolean matchDesktopScale = true;
+    private static volatile boolean modernTextures = true;
     private static volatile String steamKeyboard = IonSteamKeyboard.AUTO;
     private static volatile int chatLift = 60;
 
@@ -80,6 +81,18 @@ public final class IonSettings {
 
     public static void setMatchDesktopScale(boolean value) {
         matchDesktopScale = value;
+    }
+
+    /**
+     * 1.8.9 only: whether the "ION Modern Textures" resource pack is selected. The Resource Packs
+     * screen changes it too, so it always says what that screen shows.
+     */
+    public static boolean modernTextures() {
+        return modernTextures;
+    }
+
+    public static void setModernTextures(boolean value) {
+        modernTextures = value;
     }
 
     /** {@link IonSteamKeyboard#AUTO}, {@link IonSteamKeyboard#ON} or {@link IonSteamKeyboard#OFF}. */
@@ -127,6 +140,7 @@ public final class IonSettings {
         showCoins = bool(json, "showCoins", showCoins);
         pinServer = bool(json, "pinServer", pinServer);
         matchDesktopScale = bool(json, "matchDesktopScale", matchDesktopScale);
+        modernTextures = bool(json, "modernTextures", modernTextures);
         steamKeyboard = string(json, "steamKeyboard", steamKeyboard);
         chatLift = integer(json, "chatLift", chatLift);
     }
@@ -142,6 +156,7 @@ public final class IonSettings {
         json.addProperty("showCoins", showCoins);
         json.addProperty("pinServer", pinServer);
         json.addProperty("matchDesktopScale", matchDesktopScale);
+        json.addProperty("modernTextures", modernTextures);
         json.addProperty("steamKeyboard", steamKeyboard);
         json.addProperty("chatLift", chatLift);
 

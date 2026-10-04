@@ -14,18 +14,31 @@ public final class IonClient {
     public static final String VERSION = "1.1.0";
     public static final Logger LOGGER = LogManager.getLogger("IONClient");
 
+    private static boolean settingsLoaded;
+
     private IonClient() {
     }
 
     public static void init(String loader, File configDir) {
-        try {
-            IonSettings.load(configDir);
-        } catch (IOException e) {
-            LOGGER.warn("Could not read the ION Client settings; using the defaults", e);
-        }
+        loadSettings(configDir);
         IonSteamKeyboard.setLog(LOGGER::info);
         IonSteamKeyboard.logEnvironment();
         LOGGER.info("ION Client loaded on {} (Minecraft 1.8.9). Pinning {} to the server list.", loader, IonBrand.SERVER_ADDRESS);
     }
 
+    /**
+     * Reads the settings once. The modern texture pack needs them before Minecraft picks its
+     * resource packs, which is before the mod's init, so whichever comes first reads them.
+     */
+    public static synchronized void loadSettings(File configDir) {
+        if (settingsLoaded) {
+            return;
+        }
+        settingsLoaded = true;
+        try {
+            IonSettings.load(configDir);
+        } catch (IOException e) {
+            LOGGER.warn("Could not read the ION Client settings; using the defaults", e);
+        }
+    }
 }

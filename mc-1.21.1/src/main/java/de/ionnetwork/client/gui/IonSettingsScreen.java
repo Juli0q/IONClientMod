@@ -38,7 +38,7 @@ public class IonSettingsScreen extends Screen {
 
     @Override
     protected void init() {
-        layout = IonSettingsMenu.layout(IonSettingsMenu.sections(0), width, height);
+        layout = IonSettingsMenu.layout(IonSettingsMenu.sections(0, false), width, height);
         for (IonSettingsMenu.Slot slot : layout.slots) {
             if (slot.item instanceof IonSettingsMenu.Choice) {
                 addRenderableWidget(cycleButton((IonSettingsMenu.Choice) slot.item, slot));
