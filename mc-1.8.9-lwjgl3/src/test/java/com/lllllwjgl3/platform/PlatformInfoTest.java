@@ -75,8 +75,12 @@ public class PlatformInfoTest {
     public void explicitSwitchOverridesDetection() {
         Map<String, String> wayland = new HashMap<String, String>();
         wayland.put("WAYLAND_DISPLAY", "wayland-0");
+        Map<String, String> x11 = new HashMap<String, String>();
+        x11.put("DISPLAY", ":0");
         assertFalse(PlatformInfo.shouldActivate("false", "Linux", wayland));
-        assertTrue(PlatformInfo.shouldActivate("TRUE", "Windows 10", Collections.<String, String>emptyMap()));
+        assertTrue(PlatformInfo.shouldActivate("TRUE", "Linux", x11));
+        // Only Linux natives are bundled, so forcing it elsewhere is ignored.
+        assertFalse(PlatformInfo.shouldActivate("true", "Windows 10", Collections.<String, String>emptyMap()));
     }
 
     @Test

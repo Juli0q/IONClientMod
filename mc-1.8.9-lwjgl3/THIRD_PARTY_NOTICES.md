@@ -8,15 +8,17 @@ commit `689a96c9eaa6fbe00fc0b57c9f9f5194d440449f`, licensed under the GNU Genera
 License v3.0 or later and used here under GPL-3.0 as part of ION Client (see `LICENSE`).
 The notices below are carried over from it. ION Client's changes:
 
-- Built as the Gradle subproject `mc-1.8.9-lwjgl3` instead of with ForgeGradle 2.1.
+- Built as the Gradle subproject `mc-1.8.9-lwjgl3` instead of with ForgeGradle 2.1 and merged
+  into the ION Client 1.8.9 jar, which declares the coremod in its manifest. Only the Linux natives
+  are bundled, NanoVG and STB are dropped, and the separate `@Mod` and `mcmod.info` are removed.
 - `org.lwjglx.opengl.Display` reports the framebuffer size and the window scale, and
   `GLFWMouseImplementation` converts cursor positions to framebuffer pixels, so scaled
   (HiDPI / fractional) Wayland outputs fill the window and clicks line up.
 - Native Wayland is the default backend (`PlatformInfo.DEFAULT_WAYLAND_IME`).
 - `Lwjgl3ClassTransformer` turns off Forge's loading screen, which needs LWJGL2's
   `SharedDrawable`.
-- The coremod only activates on Linux Wayland sessions unless `-Dionclient.lwjgl3=true|false`
-  says otherwise (`PlatformInfo.shouldActivate`).
+- The coremod only activates on Linux, by default only in Wayland sessions;
+  `-Dionclient.lwjgl3=true|false` overrides that on Linux (`PlatformInfo.shouldActivate`).
 
 The jar also contains the following third-party components under their own licenses,
 all of which are GPL-3.0 compatible.
@@ -56,8 +58,6 @@ The bundled natives include libraries under their own licenses:
 
 - GLFW: zlib/libpng license (`licenses/Zlib-GLFW.txt`).
 - OpenAL Soft: GNU LGPL v2 or later (`licenses/LGPL-2.0-OpenAL-Soft.txt`).
-- NanoVG: zlib license.
-- stb: public domain or MIT, at the user's choice.
 
-The release JAR carries `LICENSE`, this file and the `licenses/` directory
-under `META-INF/`.
+The ION Client jar carries this file and the `licenses/` directory under
+`META-INF/lwjgl3/`.

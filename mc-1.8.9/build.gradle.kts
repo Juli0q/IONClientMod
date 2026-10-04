@@ -61,9 +61,17 @@ val forgeShade: Configuration by configurations.creating {
     isTransitive = false
 }
 
+// The LWJGL3 runtime (mc-1.8.9-lwjgl3: coremod, LWJGL3 and its Linux natives), merged into the same
+// jar. The bundled Mixin loads it from the FMLCorePlugin manifest entry; it only activates on Linux
+// Wayland and otherwise leaves the game on LWJGL2.
+val lwjgl3Bundle: Configuration by configurations.creating {
+    isTransitive = false
+}
+
 dependencies {
     implementation("org.spongepowered:mixin:0.8.5")
     forgeShade("org.spongepowered:mixin:0.7.11-SNAPSHOT")
+    lwjgl3Bundle(project(":mc-1.8.9-lwjgl3"))
     // The dev run needs the same Mixin build the shipped jar bundles: 0.8.x expects ASM 9, which
     // Minecraft 1.8.9's LaunchWrapper classpath (ASM 5) does not have.
     "forgeRuntimeOnly"("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
@@ -80,12 +88,18 @@ tasks.named<Jar>("forgeJar") {
     from(forgeShade.map { zipTree(it) }) {
         exclude("META-INF/MANIFEST.MF", "META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA", "module-info.class")
     }
+    // Resolved lazily, so Gradle builds the bundle before this jar.
+    dependsOn(lwjgl3Bundle)
+    from({ lwjgl3Bundle.map { zipTree(it) } }) {
+        exclude("META-INF/MANIFEST.MF")
+    }
     manifest {
         attributes(
             "ModSide" to "CLIENT",
             "TweakClass" to "org.spongepowered.asm.launch.MixinTweaker",
             "TweakOrder" to "0",
             "ForceLoadAsMod" to "true",
+            "FMLCorePlugin" to "com.lllllwjgl3.boot.Lwjgl3Coremod",
             "FMLCorePluginContainsFMLMod" to "true",
             "MixinConfigs" to "$modId.mixins.json",
         )

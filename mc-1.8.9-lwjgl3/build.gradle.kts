@@ -4,6 +4,9 @@ import java.util.zip.ZipFile
 // audio for LWJGL3/GLFW (native Wayland, real pointer lock, HiDPI). Vendored from LLLLLwjgl3, see
 // THIRD_PARTY_NOTICES.md. It references no Minecraft classes, only FML, LaunchWrapper and ASM, so it
 // is a plain Java project compiled against the Forge universal jar instead of a unimined build.
+//
+// Its jar is not shipped on its own: mc-1.8.9 merges it into the ION Client jar, whose bundled Mixin
+// loads the coremod from the FMLCorePlugin manifest entry. It only activates on Linux Wayland.
 plugins {
     java
 }
@@ -11,8 +14,9 @@ plugins {
 val modId: String by rootProject.extra { property("mod_id") as String }
 val mcVersion = "1.8.9"
 val lwjglVersion = "3.3.3"
-val lwjglModules = listOf("lwjgl", "lwjgl-glfw", "lwjgl-openal", "lwjgl-opengl", "lwjgl-nanovg", "lwjgl-stb")
-val lwjglNatives = listOf("natives-linux", "natives-windows", "natives-macos")
+val lwjglModules = listOf("lwjgl", "lwjgl-glfw", "lwjgl-openal", "lwjgl-opengl")
+// The coremod only activates on Linux, so only those natives are bundled.
+val lwjglNatives = listOf("natives-linux")
 
 java {
     toolchain {
@@ -21,7 +25,7 @@ java {
 }
 
 base {
-    archivesName.set("$modId-lwjgl3")
+    archivesName.set("$modId-lwjgl3-bundle")
 }
 
 // LWJGL3 and its natives are unpacked into the jar: the coremod puts this jar ahead of the game's
@@ -55,33 +59,21 @@ dependencies {
     }
 
     testImplementation("junit:junit:4.13.2")
-}
-
-tasks.processResources {
-    val props = mapOf("version" to project.version.toString(), "mcversion" to mcVersion)
-    inputs.properties(props)
-    filesMatching("mcmod.info") { expand(props) }
+    // Only the manual WindowCompatibilitySmoke decodes an icon with STB; it is not bundled.
+    testImplementation("org.lwjgl:lwjgl-stb:$lwjglVersion")
 }
 
 tasks.jar {
-    archiveClassifier.set("forge-$mcVersion")
-    from(embed.map { zipTree(it) }) {
+    from({ embed.map { zipTree(it) } }) {
         exclude("META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA", "META-INF/versions/**", "META-INF/INDEX.LIST")
         exclude("META-INF/MANIFEST.MF", "module-info.class")
+        // Checksums of the Windows/macOS natives, which are not bundled.
+        exclude("META-INF/windows/**", "META-INF/macos/**")
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     // The upstream LWJGL3 jars carry no license files; ship every applicable text.
-    from(rootProject.file("LICENSE")) { into("META-INF") }
-    from("THIRD_PARTY_NOTICES.md") { into("META-INF") }
-    from("licenses") { into("META-INF/licenses") }
-    manifest {
-        attributes(
-            "FMLCorePlugin" to "com.lllllwjgl3.boot.Lwjgl3Coremod",
-            "FMLCorePluginContainsFMLMod" to "true",
-            "ForceLoadAsMod" to "true",
-            "ModSide" to "CLIENT",
-        )
-    }
+    from("THIRD_PARTY_NOTICES.md") { into("META-INF/lwjgl3") }
+    from("licenses") { into("META-INF/lwjgl3/licenses") }
 }
 
 // The jar has to win over vanilla LWJGL2 and must not leak LWJGL2 classes of its own.
@@ -91,19 +83,17 @@ val verifyJar by tasks.registering {
     doLast {
         ZipFile(jarFile.get().asFile).use { zip ->
             listOf(
-                "mcmod.info",
                 "com/lllllwjgl3/boot/Lwjgl3Coremod.class",
                 "org/lwjglx/opengl/Display.class",
                 "org/lwjglx/openal/AL10.class",
                 "org/lwjgl/glfw/GLFW.class",
                 "linux/x64/org/lwjgl/glfw/libglfw.so",
-                "windows/x64/org/lwjgl/glfw/glfw.dll",
-                "macos/x64/org/lwjgl/glfw/libglfw.dylib",
+                "META-INF/lwjgl3/THIRD_PARTY_NOTICES.md",
             ).forEach { check(zip.getEntry(it) != null) { "Missing $it in ${zip.name}" } }
             val leaked = zip.entries().asSequence().map { it.name }.filter {
                 it.startsWith("org/lwjgl/input/") || it == "org/lwjgl/opengl/Display.class" ||
                     it == "org/lwjgl/LWJGLException.class" || it == "org/lwjgl/Sys.class" ||
-                    it.startsWith("de/ionnetwork/")
+                    it.startsWith("de/ionnetwork/") || it == "mcmod.info"
             }.toList()
             check(leaked.isEmpty()) { "Unexpected classes in ${zip.name}: $leaked" }
         }

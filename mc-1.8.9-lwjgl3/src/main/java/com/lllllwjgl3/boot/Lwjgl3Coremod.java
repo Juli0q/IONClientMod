@@ -18,8 +18,8 @@ public final class Lwjgl3Coremod implements IFMLLoadingPlugin {
         // Inactive: touch nothing. LaunchWrapper keeps delegating org.lwjgl.* to the game's LWJGL2 and
         // no transformer is registered, so the jar behaves as if it were not installed.
         if (!Lwjgl3Platform.decideActive()) {
-            System.out.println("[LLLLLwjgl3] inactive, keeping LWJGL2 (set -D"
-                    + Lwjgl3Platform.ENABLED_PROPERTY + "=true to force LWJGL3)");
+            System.out.println("[LLLLLwjgl3] inactive, keeping LWJGL2 (on Linux, -D"
+                    + Lwjgl3Platform.ENABLED_PROPERTY + "=true forces LWJGL3)");
             return;
         }
         URL replacementSource = Lwjgl3Classpath.prioritizeCoremod(
@@ -33,6 +33,8 @@ public final class Lwjgl3Coremod implements IFMLLoadingPlugin {
         // initializes. This is intentionally done during coremod construction.
         GlfwInitHint.apply(Launch.classLoader, Lwjgl3Platform.getBackend().name());
         verifyRuntimeNamespace(Launch.classLoader, replacementSource);
+        System.out.println("[LLLLLwjgl3] active: LWJGL3/GLFW backend=" + Lwjgl3Platform.getBackend()
+                + ", IME=" + Lwjgl3Platform.isXimEnabled() + ", XWayland-XIM=" + Lwjgl3Platform.isXwaylandIme());
     }
 
     private static void verifyRuntimeNamespace(ClassLoader loader, URL replacementSource) {

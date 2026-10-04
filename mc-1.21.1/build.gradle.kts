@@ -70,7 +70,6 @@ subprojects {
         }
     }
 
-
     val expandProps = mapOf(
         "version" to prop("mod_version"),
         "mod_id" to modId,

@@ -21,13 +21,28 @@ The official ION Network client mod. It does three things:
 | Minecraft | Loader   | Jar                                   |
 |-----------|----------|---------------------------------------|
 | 1.8.9     | Forge    | `ionclient-<version>-forge-1.8.9.jar`    |
-| 1.8.9     | Forge    | `ionclient-lwjgl3-<version>-forge-1.8.9.jar` (optional, Linux) |
 | 1.21.1    | Fabric   | `ionclient-<version>-fabric-1.21.1.jar`  |
 | 1.21.1    | NeoForge | `ionclient-<version>-neoforge-1.21.1.jar`|
 | 1.21.1    | Forge    | `ionclient-<version>-forge-1.21.1.jar`   |
 
 No other mods are required on any loader (not even Fabric API: the coin texture is loaded from the jar
 directly instead of through the resource manager).
+
+## LWJGL3 on Linux (1.8.9)
+
+Minecraft 1.8.9 ships LWJGL 2, which only speaks X11. On a Wayland desktop it runs through XWayland,
+where the camera snaps on clicks (faked pointer warps), fullscreen can crash ("No modes available")
+and scaled outputs are blurry. The 1.8.9 jar therefore also carries a coremod, built from
+`mc-1.8.9-lwjgl3/`, that swaps LWJGL 2 for LWJGL 3/GLFW with native Wayland, real pointer lock and
+full-resolution rendering, plus LWJGL 3 and its Linux natives (about 3 MB). It is derived from
+[LLLLLwjgl3](https://github.com/xiaoyu1738/LLLLLwjgl3-1.8.9-Forge); see
+`mc-1.8.9-lwjgl3/THIRD_PARTY_NOTICES.md` for its origin and ION's changes.
+
+Forge ignores `FMLCorePlugin` in jars that start through a `TweakClass`; the bundled Mixin picks it up
+instead and hands the coremod to FML. It only activates on Linux Wayland sessions and otherwise leaves
+the game on LWJGL 2; on Linux, `-Dionclient.lwjgl3=true` or `=false` overrides the detection. Forge's
+loading screen is turned off while it is active. ION Client also multiplies the chosen GUI scale by the
+desktop scale (`ScaledResolutionMixin`), so "Large" keeps its size on a 1.45x display.
 
 ## Glowing and modern sounds (1.8.9)
 
@@ -88,7 +103,7 @@ export JAVA_HOME=~/.gradle/jdks/eclipse_adoptium-21-amd64-linux.2   # or any JDK
 ./gradlew buildAll
 ```
 
-`buildAll` builds every target and collects the five jars in `build/libs/`. The targets can also
+`buildAll` builds every target and collects the four jars in `build/libs/`. The targets can also
 be built one at a time:
 
 ```bash
@@ -101,7 +116,7 @@ be built one at a time:
 ```
 common/      brand constants and the entry's layout rules; pure Java 8, compiled into every target
 mc-1.8.9/    unimined build: src/main (MCP names: the entry, its mixins) + src/forge (the @Mod)
-mc-1.8.9-lwjgl3/  plain Java build of the optional LWJGL3 coremod jar (no Minecraft classes)
+mc-1.8.9-lwjgl3/  plain Java build of the LWJGL3 coremod merged into the 1.8.9 jar (no Minecraft classes)
 mc-1.21.1/   Architectury Loom build, included from the root: src/main (mojmap: the entry, its
              mixins) + fabric/, neoforge/, forge/ (one entrypoint and metadata file each)
 ```

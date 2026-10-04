@@ -21,7 +21,7 @@ subprojects {
     apply(plugin = "java")
 
     // Shared, loader-agnostic code (brand constants, colours) is compiled into every mod target.
-    // The LWJGL3 runtime is not one: it must not carry ION classes.
+    // The LWJGL3 runtime (merged into the 1.8.9 jar) is not one and must not carry ION classes.
     if (name != "mc-1.8.9-lwjgl3") {
         extensions.configure<JavaPluginExtension> {
             sourceSets.named("main") {
@@ -40,11 +40,10 @@ subprojects {
 // from the included build. The jars are collected into build/libs at the repository root.
 val collectJars by tasks.registering(Sync::class) {
     val included = gradle.includedBuild("mc-1.21.1")
-    dependsOn(":mc-1.8.9:build", ":mc-1.8.9-lwjgl3:build")
+    dependsOn(":mc-1.8.9:build")
     listOf("fabric", "neoforge", "forge").forEach { dependsOn(included.task(":$it:build")) }
 
     from(project(":mc-1.8.9").layout.buildDirectory.dir("libs"))
-    from(project(":mc-1.8.9-lwjgl3").layout.buildDirectory.dir("libs"))
     listOf("fabric", "neoforge", "forge").forEach { from(included.projectDir.resolve("$it/build/libs")) }
     listOf("fabric", "neoforge", "forge").forEach { include("*-${project.version}-$it-*.jar") }
     exclude("*-dev.jar", "*-sources.jar")

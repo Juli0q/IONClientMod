@@ -7,7 +7,8 @@ import java.lang.reflect.Method;
  *
  * Plain LWJGL2 always renders at logical size, so this is 1 there. Only the LWJGL3 compatibility layer
  * renders at full framebuffer resolution and reports the factor through {@code org.lwjglx.opengl.Display}.
- * It is looked up reflectively so the mod keeps working without that layer.
+ * That layer ships in this jar but only runs when its coremod activated (it then sets
+ * {@code lllllwjgl3.detectedBackend}); otherwise its classes are not touched at all.
  */
 public final class IonDisplayScale {
     private static final Method SCALE_X = find();
@@ -26,6 +27,7 @@ public final class IonDisplayScale {
     }
 
     private static Method find() {
+        if (System.getProperty("lllllwjgl3.detectedBackend") == null) return null;
         try {
             return Class.forName("org.lwjglx.opengl.Display").getMethod("getScaleX");
         } catch (ReflectiveOperationException | LinkageError e) {

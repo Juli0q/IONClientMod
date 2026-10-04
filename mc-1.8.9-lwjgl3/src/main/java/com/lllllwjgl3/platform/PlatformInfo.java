@@ -35,16 +35,18 @@ public final class PlatformInfo {
     }
 
     /**
-     * ION Client build: whether to replace LWJGL2 at all. "true"/"false" force it; anything else is
-     * auto, which only switches on Linux Wayland sessions. That is where LWJGL2 breaks (XWayland pointer
-     * warps, xrandr fullscreen, scaling); elsewhere vanilla LWJGL2 is the lower-risk choice for mod
-     * compatibility, and macOS would additionally need -XstartOnFirstThread for GLFW.
+     * ION Client build: whether to replace LWJGL2 at all. Only Linux can: the jar bundles Linux natives
+     * only, and macOS would also need -XstartOnFirstThread for GLFW. On Linux "true"/"false" force it;
+     * anything else is auto, which only switches on Wayland sessions. That is where LWJGL2 breaks
+     * (XWayland pointer warps, xrandr fullscreen, scaling); on X11 vanilla LWJGL2 is the lower-risk
+     * choice for mod compatibility.
      */
     public static boolean shouldActivate(String requested, String osName, Map<String, String> environment) {
+        if (detectOperatingSystem(osName) != OperatingSystem.LINUX) return false;
         String value = requested == null ? "" : requested.trim();
         if ("true".equalsIgnoreCase(value)) return true;
         if ("false".equalsIgnoreCase(value)) return false;
-        return detectOperatingSystem(osName) == OperatingSystem.LINUX && isWayland(environment);
+        return isWayland(environment);
     }
 
     public static Backend parseBackend(String value) {
