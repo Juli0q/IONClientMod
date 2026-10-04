@@ -26,6 +26,7 @@ public final class IonPanoramas {
             "night_streets",
             "night_skyline",
             "night_tree",
+            "stone_hall",
     };
 
     /** The set shown this launch. */

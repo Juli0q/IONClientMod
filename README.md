@@ -14,9 +14,9 @@ The official ION Network client mod. It does three things:
   account's UUID, refreshes every five minutes, and the display stays hidden when the account
   has no ION profile or the API cannot be reached.
 - **Replaces the main menu panorama** with shots of the ION lobby (two by day, three by night,
-  rendered with Complementary Reimagined + Euphoria Patches). One set is picked at random per
-  launch. 1.21.1 ships 1024px faces like vanilla; 1.8.9 blurs its panorama heavily, so it gets
-  512px faces to keep the jar small.
+  one indoors, rendered with Complementary Reimagined + Euphoria Patches). One set is picked at
+  random per launch. 1.21.1 ships 1024px faces like vanilla; 1.8.9 blurs its panorama heavily, so
+  it gets 512px faces to keep the jar small.
 
 | Minecraft | Loader   | Jar                                   |
 |-----------|----------|---------------------------------------|
