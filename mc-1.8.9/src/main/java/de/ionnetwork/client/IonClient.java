@@ -3,6 +3,9 @@ package de.ionnetwork.client;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
+
 /** Shared entry point for the 1.8.9 targets. */
 public final class IonClient {
 
@@ -14,7 +17,13 @@ public final class IonClient {
     private IonClient() {
     }
 
-    public static void init(String loader) {
+    public static void init(String loader, File configDir) {
+        try {
+            IonSettings.load(configDir);
+        } catch (IOException e) {
+            LOGGER.warn("Could not read the ION Client settings; using the defaults", e);
+        }
         LOGGER.info("ION Client loaded on {} (Minecraft 1.8.9). Pinning {} to the server list.", loader, IonBrand.SERVER_ADDRESS);
     }
+
 }

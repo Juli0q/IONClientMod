@@ -5,12 +5,14 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
 import de.ionnetwork.client.IonClient;
+import de.ionnetwork.client.gui.IonSettingsScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -29,8 +31,10 @@ import java.time.format.DateTimeFormatter;
 /**
  * Development self-test, inert unless {@code IONCLIENT_AUTOTEST=1} is in the environment (or
  * {@code -Dionclient.autotest=true} is passed): once the title screen is up it opens the
- * multiplayer screen, waits for the ping, saves {@code screenshots/ionclient-autotest.png} and
- * quits. Used to eyeball the pinned entry without a person at the keyboard.
+ * multiplayer screen, waits for the ping, saves {@code screenshots/ionclient-autotest.png}, then
+ * shows Options and the ION Client settings ({@code ionclient-autotest-options.png},
+ * {@code ionclient-autotest-settings.png}) and quits. Used to eyeball the pinned entry and the
+ * settings without a person at the keyboard.
  *
  * <p>Panorama capture, inert unless {@code IONCLIENT_PANORAMA=1} is set or a file named
  * {@code ionclient-panorama} exists in the game directory (handy under a launcher): pressing F6
@@ -238,10 +242,24 @@ public abstract class DevAutoTestMixin {
             return;
         }
         if (screen instanceof JoinMultiplayerScreen && ++ionclient$ticksOnScreen == 120) {
-            IonClient.LOGGER.info("[autotest] saving screenshot and quitting");
-            Screenshot.grab(gameDirectory, "ionclient-autotest.png", getMainRenderTarget(), message -> IonClient.LOGGER.info("[autotest] {}", message.getString()));
+            ionclient$shoot("ionclient-autotest.png");
+            setScreen(new OptionsScreen(new TitleScreen(), options));
+            ionclient$ticksOnScreen = 0;
+        } else if (screen instanceof OptionsScreen && ++ionclient$ticksOnScreen == 20) {
+            ionclient$shoot("ionclient-autotest-options.png");
+            setScreen(new IonSettingsScreen(screen));
+            ionclient$ticksOnScreen = 0;
+        } else if (screen instanceof IonSettingsScreen && ++ionclient$ticksOnScreen == 20) {
+            ionclient$shoot("ionclient-autotest-settings.png");
+            IonClient.LOGGER.info("[autotest] done, quitting");
             stop();
         }
+    }
+
+    @Unique
+    private void ionclient$shoot(String name) {
+        IonClient.LOGGER.info("[autotest] saving {}", name);
+        Screenshot.grab(gameDirectory, name, getMainRenderTarget(), message -> IonClient.LOGGER.info("[autotest] {}", message.getString()));
     }
 
     /**

@@ -1,6 +1,7 @@
 package de.ionnetwork.client.mixin;
 
 import de.ionnetwork.client.IonBrand;
+import de.ionnetwork.client.IonSettings;
 import de.ionnetwork.client.gui.IonServerData;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
@@ -19,7 +20,8 @@ import java.util.List;
  *
  * <p>The pinned entry lives at index 0 of the same list the screen indexes into, so delete, edit
  * and reorder keep pointing at the right saved server; the operations that would touch the
- * pinned entry itself are refused here.
+ * pinned entry itself are refused here. With pinning turned off in the settings the list is left
+ * exactly as vanilla has it, including any ION entry the player saved themselves.
  */
 @Mixin(ServerList.class)
 public abstract class ServerListMixin {
@@ -28,11 +30,16 @@ public abstract class ServerListMixin {
     @Final
     private List<ServerData> servers;
 
+    /** Null when this list was loaded with pinning turned off. */
     @Unique
     private IonServerData ionclient$pinned;
 
     @Inject(method = "loadServerList", at = @At("RETURN"))
     private void ionclient$pinAfterLoad(CallbackInfo ci) {
+        ionclient$pinned = null;
+        if (!IonSettings.pinServer()) {
+            return;
+        }
         // The pinned entry must be the only ION entry: drop the player's own copies of the
         // server (and any stray pinned entry), whichever way the address was written. The
         // next save writes the list back without them.
@@ -43,6 +50,9 @@ public abstract class ServerListMixin {
 
     @Inject(method = "saveServerList", at = @At("HEAD"))
     private void ionclient$unpinBeforeSave(CallbackInfo ci) {
+        if (ionclient$pinned == null) {
+            return;
+        }
         servers.removeIf(data -> data instanceof IonServerData || IonBrand.isIonAddress(data.serverIP));
     }
 

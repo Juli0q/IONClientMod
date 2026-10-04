@@ -28,6 +28,24 @@ The official ION Network client mod. It does three things:
 No other mods are required on any loader (not even Fabric API: the coin texture is loaded from the jar
 directly instead of through the resource manager).
 
+## Settings
+
+Options has an **ION Client...** button (on 1.8.9 it takes the slot of "Broadcast Settings...",
+whose Twitch API is long gone; on 1.21.1 it is a full-width row under the grid). Forge's and
+NeoForge's mod lists open the same screen from their "Config" button. It looks like vanilla's
+options screens, with "ION" in the logo gradient and a gradient line under the header:
+
+| Setting       | Values                                         | Default |
+|---------------|------------------------------------------------|---------|
+| Panorama      | Random, one of the lobby sets, Minecraft       | Random  |
+| ION Coins     | ON / OFF                                       | ON      |
+| Pinned Server | ON / OFF (off leaves the server list vanilla)  | ON      |
+| Desktop Scale | ON / OFF, 1.8.9 only; active under LWJGL3 on a scaled desktop | ON |
+
+plus links to the website and Discord. Changes apply right away (the server list on its next
+load) and are saved to `config/ionclient.json` when the screen closes. The wording and layout
+live in `common/` (`IonSettings`, `IonSettingsMenu`); each version only draws them.
+
 ## LWJGL3 on Linux (1.8.9)
 
 Minecraft 1.8.9 ships LWJGL 2, which only speaks X11. On a Wayland desktop it runs through XWayland,
@@ -185,8 +203,9 @@ pinned entry is selected.
 
 With `IONCLIENT_AUTOTEST=1` in the environment the client saves
 `screenshots/ionclient-autotest-title.png` from the main menu, then opens the multiplayer screen
-on its own, waits for the ping, writes `screenshots/ionclient-autotest.png` and quits. That is
-how both displays are checked without a person at the keyboard. Dev sessions are offline and
+on its own, waits for the ping, writes `screenshots/ionclient-autotest.png`, then shows Options
+and the ION Client settings (`ionclient-autotest-options.png`, `ionclient-autotest-settings.png`)
+and quits. That is how the displays are checked without a person at the keyboard. Dev sessions are offline and
 have no ION profile, so `IONCLIENT_DEV_UUID` and `IONCLIENT_DEV_NAME` point the coin lookup at
 a real account.
 

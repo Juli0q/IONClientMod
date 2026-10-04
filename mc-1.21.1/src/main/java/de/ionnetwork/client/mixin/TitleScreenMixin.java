@@ -1,6 +1,7 @@
 package de.ionnetwork.client.mixin;
 
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
+import de.ionnetwork.client.IonSettings;
 import de.ionnetwork.client.gui.IonCoinsOverlay;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -65,6 +66,8 @@ public abstract class TitleScreenMixin extends Screen {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void ionclient$renderCoins(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        IonCoinsOverlay.render(graphics, this.width, mouseX, mouseY);
+        if (IonSettings.showCoins()) {
+            IonCoinsOverlay.render(graphics, this.width, mouseX, mouseY);
+        }
     }
 }

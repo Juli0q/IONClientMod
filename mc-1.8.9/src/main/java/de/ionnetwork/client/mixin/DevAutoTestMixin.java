@@ -1,10 +1,12 @@
 package de.ionnetwork.client.mixin;
 
 import de.ionnetwork.client.IonClient;
+import de.ionnetwork.client.gui.IonSettingsScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
+import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.shader.Framebuffer;
@@ -26,8 +28,10 @@ import java.io.File;
 /**
  * Development self-test, inert unless {@code IONCLIENT_AUTOTEST=1} is in the environment (or
  * {@code -Dionclient.autotest=true} is passed): once the main menu is up it opens the
- * multiplayer screen, waits for the ping, saves {@code screenshots/ionclient-autotest.png} and
- * quits. Used to eyeball the pinned entry without a person at the keyboard.
+ * multiplayer screen, waits for the ping, saves {@code screenshots/ionclient-autotest.png}, then
+ * shows Options and the ION Client settings ({@code ionclient-autotest-options.png},
+ * {@code ionclient-autotest-settings.png}) and quits. Used to eyeball the pinned entry and the
+ * settings without a person at the keyboard.
  *
  * <p>{@code IONCLIENT_AUTOTEST=glow} instead opens a flat creative world, summons a few entities
  * (one behind a wall, one dropped item), puts the player on a red team, raises the 1.9 glowing flag
@@ -51,6 +55,9 @@ public abstract class DevAutoTestMixin {
     public File mcDataDir;
 
     @Shadow
+    public GameSettings gameSettings;
+
+    @Shadow
     public abstract void displayGuiScreen(GuiScreen screen);
 
     @Shadow
@@ -61,9 +68,6 @@ public abstract class DevAutoTestMixin {
 
     @Shadow
     public EntityPlayerSP thePlayer;
-
-    @Shadow
-    public GameSettings gameSettings;
 
     @Shadow
     public abstract void launchIntegratedServer(String folderName, String worldName, WorldSettings settings);
@@ -111,8 +115,16 @@ public abstract class DevAutoTestMixin {
             return;
         }
         if (currentScreen instanceof GuiMultiplayer && ++ionclient$ticksOnScreen == 120) {
-            IonClient.LOGGER.info("[autotest] saving screenshot and quitting");
-            ScreenShotHelper.saveScreenshot(mcDataDir, "ionclient-autotest.png", displayWidth, displayHeight, getFramebuffer());
+            ionclient$shoot("ionclient-autotest.png");
+            displayGuiScreen(new GuiOptions(new GuiMainMenu(), gameSettings));
+            ionclient$ticksOnScreen = 0;
+        } else if (currentScreen instanceof GuiOptions && ++ionclient$ticksOnScreen == 20) {
+            ionclient$shoot("ionclient-autotest-options.png");
+            displayGuiScreen(new IonSettingsScreen(currentScreen));
+            ionclient$ticksOnScreen = 0;
+        } else if (currentScreen instanceof IonSettingsScreen && ++ionclient$ticksOnScreen == 20) {
+            ionclient$shoot("ionclient-autotest-settings.png");
+            IonClient.LOGGER.info("[autotest] done, quitting");
             shutdown();
         }
     }

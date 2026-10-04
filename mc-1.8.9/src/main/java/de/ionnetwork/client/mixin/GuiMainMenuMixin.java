@@ -1,6 +1,7 @@
 package de.ionnetwork.client.mixin;
 
 import de.ionnetwork.client.IonPanoramas;
+import de.ionnetwork.client.IonSettings;
 import de.ionnetwork.client.gui.IonCoinsOverlay;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMainMenu;
@@ -25,8 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 /**
- * Draws the ION coin balance on the main menu, swaps in this launch's ION lobby panorama (sharp
- * instead of vanilla's blurred one) and takes the Realms button off the menu.
+ * Draws the ION coin balance on the main menu, shows the ION lobby panorama the settings ask for and
+ * takes the Realms button off the menu.
  */
 @Mixin(GuiMainMenu.class)
 public abstract class GuiMainMenuMixin extends GuiScreen implements IonCoinsOverlay.TooltipAccess {
@@ -44,11 +45,38 @@ public abstract class GuiMainMenuMixin extends GuiScreen implements IonCoinsOver
     @Shadow
     private int panoramaTimer;
 
+    @Unique
+    private static ResourceLocation[] ionclient$vanillaPanorama;
+    /** The set the faces currently point at; null for vanilla. */
+    @Unique
+    private static String ionclient$shownSet;
+
     @Inject(method = "<clinit>", at = @At("TAIL"))
     private static void ionclient$useLobbyPanorama(CallbackInfo ci) {
+        // Copied by hand: Mixin 0.7 cannot resolve array.clone() (it looks the array type up as a class).
+        ionclient$vanillaPanorama = new ResourceLocation[titlePanoramaPaths.length];
         for (int face = 0; face < titlePanoramaPaths.length; face++) {
-            titlePanoramaPaths[face] = new ResourceLocation(IonPanoramas.NAMESPACE, IonPanoramas.facePath(face));
+            ionclient$vanillaPanorama[face] = titlePanoramaPaths[face];
         }
+        ionclient$showPanorama(IonPanoramas.active());
+    }
+
+    /** The panorama setting can change in the settings screen, so the faces follow it every frame. */
+    @Inject(method = "drawScreen", at = @At("HEAD"))
+    private void ionclient$followPanoramaSetting(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+        String set = IonPanoramas.active();
+        if (set == null ? ionclient$shownSet != null : !set.equals(ionclient$shownSet)) {
+            ionclient$showPanorama(set);
+        }
+    }
+
+    @Unique
+    private static void ionclient$showPanorama(String set) {
+        for (int face = 0; face < titlePanoramaPaths.length; face++) {
+            titlePanoramaPaths[face] = set == null ? ionclient$vanillaPanorama[face]
+                    : new ResourceLocation(IonPanoramas.NAMESPACE, IonPanoramas.facePath(set, face));
+        }
+        ionclient$shownSet = set;
     }
 
     /**
@@ -154,7 +182,9 @@ public abstract class GuiMainMenuMixin extends GuiScreen implements IonCoinsOver
 
     @Inject(method = "drawScreen", at = @At("TAIL"))
     private void ionclient$renderCoins(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
-        IonCoinsOverlay.render(this, mouseX, mouseY);
+        if (IonSettings.showCoins()) {
+            IonCoinsOverlay.render(this, mouseX, mouseY);
+        }
     }
 
     @Override
