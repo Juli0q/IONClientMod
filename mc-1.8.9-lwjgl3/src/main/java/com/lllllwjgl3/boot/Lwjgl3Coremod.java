@@ -18,7 +18,11 @@ public final class Lwjgl3Coremod implements IFMLLoadingPlugin {
         // A modern-Java profile (RetroFuturaBootstrap) puts LWJGL3 on the launcher classpath instead of
         // LWJGL2. Then org.lwjgl.* stays with the application loader and only the org.lwjglx layer and the
         // transformer come from this jar; the Java 8 classpath surgery below is neither needed nor possible.
-        boolean launcherLwjgl3 = ClassLoader.getSystemClassLoader().getResource("org/lwjgl/glfw/GLFW.class") != null;
+        // Seeing GLFW is not enough: on Java 8 it can be visible next to LWJGL2 (whose PointerBuffer then
+        // wins and breaks GLFW), so the profile also must not have LWJGL2's Display, which this jar lacks.
+        ClassLoader system = ClassLoader.getSystemClassLoader();
+        boolean launcherLwjgl3 = system.getResource("org/lwjgl/glfw/GLFW.class") != null
+                && system.getResource("org/lwjgl/opengl/Display.class") == null;
         URL replacementSource = null;
         if (launcherLwjgl3) {
             Lwjgl3Platform.forceActive();
