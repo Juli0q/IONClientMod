@@ -230,6 +230,7 @@ public abstract class DevAutoTestMixin {
         if (!ionclient$opened) {
             if (screen instanceof TitleScreen && ++ionclient$ticksOnTitle == 80) {
                 IonClient.LOGGER.info("[autotest] saving title screenshot, opening the multiplayer screen");
+                ionclient$checkHelloCodec();
                 Screenshot.grab(gameDirectory, "ionclient-autotest-title.png", getMainRenderTarget(), message -> IonClient.LOGGER.info("[autotest] {}", message.getString()));
                 ionclient$opened = true;
                 setScreen(new JoinMultiplayerScreen(screen));
@@ -240,6 +241,28 @@ public abstract class DevAutoTestMixin {
             IonClient.LOGGER.info("[autotest] saving screenshot and quitting");
             Screenshot.grab(gameDirectory, "ionclient-autotest.png", getMainRenderTarget(), message -> IonClient.LOGGER.info("[autotest] {}", message.getString()));
             stop();
+        }
+    }
+
+    /**
+     * The hello can only be sent if {@code DiscardedPayloadMixin} made the packet codec accept it, and a
+     * failure there would throw on every join, so the codec is exercised here, without a server.
+     */
+    @Unique
+    private static void ionclient$checkHelloCodec() {
+        try {
+            net.minecraft.network.FriendlyByteBuf buf = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+            net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket.STREAM_CODEC.encode(buf,
+                    new net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket(
+                            de.ionnetwork.client.net.IonHelloPayload.of(IonClient.VERSION)));
+            int written = buf.readableBytes();
+            net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket decoded =
+                    net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket.STREAM_CODEC.decode(buf);
+            IonClient.LOGGER.info("[autotest] hello codec round-trip: {} bytes, decoded as {} with {} payload bytes", written,
+                    decoded.payload().type().id(),
+                    decoded.payload() instanceof de.ionnetwork.client.net.IonHelloPayload hello ? hello.bytes().length : -1);
+        } catch (Throwable t) {
+            IonClient.LOGGER.error("[autotest] hello codec round-trip FAILED", t);
         }
     }
 }

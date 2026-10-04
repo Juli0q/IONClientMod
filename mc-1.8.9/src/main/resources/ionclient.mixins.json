@@ -8,9 +8,13 @@
     "DevAutoTestMixin",
     "GuiMainMenuMixin",
     "GuiMultiplayerMixin",
+    "NetHandlerPlayClientMixin",
+    "RenderGlobalMixin",
+    "RendererLivingEntityMixin",
     "ScaledResolutionMixin",
     "ServerListMixin",
-    "ServerSelectionListMixin"
+    "ServerSelectionListMixin",
+    "SoundHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -60,6 +60,17 @@ subprojects {
         options.release.set(21)
     }
 
+    // The client announces its version to ION's servers from IonClient.VERSION, which cannot be
+    // expanded at build time. Fail loudly if it drifts from gradle.properties.
+    tasks.named("compileJava") {
+        doFirst {
+            val source = rootProject.file("src/main/java/de/ionnetwork/client/IonClient.java").readText()
+            val expected = "VERSION = \"${prop("mod_version")}\""
+            check(source.contains(expected)) { "IonClient.VERSION does not match mod_version=${prop("mod_version")} in gradle.properties" }
+        }
+    }
+
+
     val expandProps = mapOf(
         "version" to prop("mod_version"),
         "mod_id" to modId,

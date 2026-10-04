@@ -5,8 +5,10 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [
+    "ClientPacketListenerMixin",
     "CubeMapMixin",
     "DevAutoTestMixin",
+    "DiscardedPayloadMixin",
     "JoinMultiplayerScreenMixin",
     "ServerListMixin",
     "ServerSelectionListMixin",
