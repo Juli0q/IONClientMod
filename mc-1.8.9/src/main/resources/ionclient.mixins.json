@@ -13,6 +13,7 @@
     "GuiScreenBookMixin",
     "GuiTextFieldMixin",
     "GuiTypingScreenMixin",
+    "GuiUtilsMixin",
     "MinecraftScreenMixin",
     "ModernTexturesMixin",
     "NetHandlerPlayClientMixin",
