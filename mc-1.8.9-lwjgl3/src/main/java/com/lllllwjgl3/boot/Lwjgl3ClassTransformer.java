@@ -26,7 +26,7 @@ public final class Lwjgl3ClassTransformer implements IClassTransformer {
     private static final String SPLASH_PROGRESS = "net.minecraftforge.fml.client.SplashProgress";
     private static final Set<String> LEGACY_OPENGL_CLASSES = new HashSet<String>(Arrays.asList(
             "Display", "DisplayMode", "PixelFormat", "ContextCapabilities", "GLContext",
-            "OpenGLException", "EventQueue", "Sync", "Util"));
+            "OpenGLException", "EventQueue", "Sync", "Util", "Drawable", "SharedDrawable"));
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {

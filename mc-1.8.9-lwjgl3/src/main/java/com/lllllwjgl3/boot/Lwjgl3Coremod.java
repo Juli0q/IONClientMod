@@ -15,25 +15,33 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 @IFMLLoadingPlugin.SortingIndex(1001)
 public final class Lwjgl3Coremod implements IFMLLoadingPlugin {
     public Lwjgl3Coremod() {
-        // Inactive: touch nothing. LaunchWrapper keeps delegating org.lwjgl.* to the game's LWJGL2 and
-        // no transformer is registered, so the jar behaves as if it were not installed.
-        if (!Lwjgl3Platform.decideActive()) {
+        // A modern-Java profile (RetroFuturaBootstrap) puts LWJGL3 on the launcher classpath instead of
+        // LWJGL2. Then org.lwjgl.* stays with the application loader and only the org.lwjglx layer and the
+        // transformer come from this jar; the Java 8 classpath surgery below is neither needed nor possible.
+        boolean launcherLwjgl3 = ClassLoader.getSystemClassLoader().getResource("org/lwjgl/glfw/GLFW.class") != null;
+        URL replacementSource = null;
+        if (launcherLwjgl3) {
+            Lwjgl3Platform.forceActive();
+        } else if (!Lwjgl3Platform.decideActive()) {
+            // Inactive: touch nothing. LaunchWrapper keeps delegating org.lwjgl.* to the game's LWJGL2 and
+            // no transformer is registered, so the jar behaves as if it were not installed.
             System.out.println("[LLLLLwjgl3] inactive, keeping LWJGL2 (on Linux, -D"
                     + Lwjgl3Platform.ENABLED_PROPERTY + "=true forces LWJGL3)");
             return;
+        } else {
+            replacementSource = Lwjgl3Classpath.prioritizeCoremod(Launch.classLoader, Lwjgl3Coremod.class);
+            // LaunchWrapper delegates org.lwjgl.* to the application loader by
+            // default. That loader only has Minecraft's LWJGL2 jars, while the
+            // replacement LWJGL3 classes live in this coremod's fat jar.
+            detachVanillaLwjgl(Launch.classLoader);
         }
-        URL replacementSource = Lwjgl3Classpath.prioritizeCoremod(
-                Launch.classLoader, Lwjgl3Coremod.class);
-        // LaunchWrapper delegates org.lwjgl.* to the application loader by
-        // default. That loader only has Minecraft's LWJGL2 jars, while the
-        // replacement LWJGL3 classes live in this coremod's fat jar.
-        detachVanillaLwjgl(Launch.classLoader);
         Lwjgl3Platform.detect();
         // GLFW must see the platform hint before the vendored Display class
         // initializes. This is intentionally done during coremod construction.
         GlfwInitHint.apply(Launch.classLoader, Lwjgl3Platform.getBackend().name());
         verifyRuntimeNamespace(Launch.classLoader, replacementSource);
-        System.out.println("[LLLLLwjgl3] active: LWJGL3/GLFW backend=" + Lwjgl3Platform.getBackend()
+        System.out.println("[LLLLLwjgl3] active (" + (launcherLwjgl3 ? "launcher" : "bundled")
+                + " LWJGL3): GLFW backend=" + Lwjgl3Platform.getBackend()
                 + ", IME=" + Lwjgl3Platform.isXimEnabled() + ", XWayland-XIM=" + Lwjgl3Platform.isXwaylandIme());
     }
 
@@ -43,7 +51,7 @@ public final class Lwjgl3Coremod implements IFMLLoadingPlugin {
             Class.forName("org.lwjglx.input.Keyboard", false, loader);
             Class<?> gl11 = Class.forName("org.lwjgl.opengl.GL11", false, loader);
             URL glSource = gl11.getProtectionDomain().getCodeSource().getLocation();
-            if (!Lwjgl3Classpath.sameLocation(replacementSource, glSource)) {
+            if (replacementSource != null && !Lwjgl3Classpath.sameLocation(replacementSource, glSource)) {
                 throw new IllegalStateException("LWJGL3 classpath replacement failed: org.lwjgl.opengl.GL11 "
                         + "was loaded from " + glSource + " instead of " + replacementSource);
             }

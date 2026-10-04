@@ -23,6 +23,11 @@ public final class Lwjgl3Platform {
         return active;
     }
 
+    /** For launcher profiles that ship LWJGL3 instead of LWJGL2: there is nothing to fall back to. */
+    public static void forceActive() {
+        active = true;
+    }
+
     public static boolean isActive() {
         return active;
     }
