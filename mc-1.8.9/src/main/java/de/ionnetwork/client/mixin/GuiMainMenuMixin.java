@@ -2,6 +2,7 @@ package de.ionnetwork.client.mixin;
 
 import de.ionnetwork.client.IonPanoramas;
 import de.ionnetwork.client.gui.IonCoinsOverlay;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
@@ -15,15 +16,17 @@ import org.lwjgl.util.glu.Project;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
 /**
- * Draws the ION coin balance on the main menu and swaps in this launch's ION lobby panorama,
- * sharp instead of vanilla's blurred one.
+ * Draws the ION coin balance on the main menu, swaps in this launch's ION lobby panorama (sharp
+ * instead of vanilla's blurred one) and takes the Realms button off the menu.
  */
 @Mixin(GuiMainMenu.class)
 public abstract class GuiMainMenuMixin extends GuiScreen implements IonCoinsOverlay.TooltipAccess {
@@ -31,6 +34,12 @@ public abstract class GuiMainMenuMixin extends GuiScreen implements IonCoinsOver
     @Shadow
     @Final
     private static ResourceLocation[] titlePanoramaPaths;
+
+    @Unique
+    private static final int ionclient$REALMS_ID = 14;
+    /** Forge's "Mods" button, which shares the Realms row. */
+    @Unique
+    private static final int ionclient$MODS_ID = 6;
 
     @Shadow
     private int panoramaTimer;
@@ -40,6 +49,42 @@ public abstract class GuiMainMenuMixin extends GuiScreen implements IonCoinsOver
         for (int face = 0; face < titlePanoramaPaths.length; face++) {
             titlePanoramaPaths[face] = new ResourceLocation(IonPanoramas.NAMESPACE, IonPanoramas.facePath(face));
         }
+    }
+
+    /**
+     * Drops the Realms button. Forge's Mods button on the same row takes the full width; without one,
+     * the rows below move up into the gap.
+     */
+    @Inject(method = "initGui", at = @At("TAIL"))
+    private void ionclient$removeRealmsButton(CallbackInfo ci) {
+        GuiButton realms = null;
+        for (GuiButton button : buttonList) {
+            if (button.id == ionclient$REALMS_ID) {
+                realms = button;
+            }
+        }
+        if (realms == null) {
+            return;
+        }
+        buttonList.remove(realms);
+        for (int i = 0; i < buttonList.size(); i++) {
+            GuiButton mods = buttonList.get(i);
+            if (mods.id == ionclient$MODS_ID && mods.yPosition == realms.yPosition) {
+                buttonList.set(i, new GuiButton(mods.id, width / 2 - 100, mods.yPosition, 200, 20, mods.displayString));
+                return;
+            }
+        }
+        for (GuiButton button : buttonList) {
+            if (button.yPosition > realms.yPosition && button.yPosition <= realms.yPosition + 36) {
+                button.yPosition -= 24;
+            }
+        }
+    }
+
+    /** The Realms invite and news icons sit next to the Realms button, so they go with it. */
+    @Inject(method = "func_183501_a", at = @At("HEAD"), cancellable = true)
+    private void ionclient$hideRealmsNotifications(CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(false);
     }
 
     /**
