@@ -147,6 +147,7 @@ public final class IonSettingsMenu {
         if (desktopScale > 0) {
             sections.add(new Section("Display", desktopScale(desktopScale)));
         }
+        sections.add(new Section("Steam Deck", steamKeyboard(), chatLift()));
         sections.add(new Section(IonBrand.SERVER_NAME,
                 new Link("Website", IonBrand.WEBSITE),
                 new Link("Discord", IonBrand.DISCORD_INVITE)));
@@ -193,6 +194,59 @@ public final class IonSettingsMenu {
     private static Choice pin() {
         return toggle("Pinned Server", "Keeps " + IonBrand.SERVER_NAME + " at the top of your multiplayer server list.",
                 true, false, IonSettings::pinServer, IonSettings::setPinServer);
+    }
+
+    private static Choice steamKeyboard() {
+        List<String> keys = Arrays.asList(IonSteamKeyboard.AUTO, IonSteamKeyboard.ON, IonSteamKeyboard.OFF);
+        List<String> values = Collections.unmodifiableList(Arrays.asList("Auto", ON, OFF));
+        return new Choice("Steam Keyboard", "Opens Steam's on-screen keyboard when you click a text field, open the chat "
+                + "or edit a sign or book. Auto: only in the Steam Deck's Game Mode and Big Picture. ON needs Steam running.",
+                true, false) {
+            @Override
+            public List<String> values() {
+                return values;
+            }
+
+            @Override
+            public int selected() {
+                int index = keys.indexOf(IonSettings.steamKeyboard());
+                return index < 0 ? 0 : index;
+            }
+
+            @Override
+            public void select(int index) {
+                IonSettings.setSteamKeyboard(keys.get(index));
+            }
+        };
+    }
+
+    private static final List<Integer> CHAT_LIFTS = Collections.unmodifiableList(Arrays.asList(40, 45, 50, 55, 60, 65, 70, 75));
+
+    private static Choice chatLift() {
+        List<String> values = new ArrayList<>();
+        for (int percent : CHAT_LIFTS) {
+            values.add(percent + "%");
+        }
+        List<String> names = Collections.unmodifiableList(values);
+        return new Choice("Chat Lift", "How far the chat moves up while Steam's keyboard covers the bottom of the screen "
+                + "in Game Mode, as a share of the screen's height. Raise it if the keyboard still hides the chat input.",
+                true, false) {
+            @Override
+            public List<String> values() {
+                return names;
+            }
+
+            @Override
+            public int selected() {
+                int index = CHAT_LIFTS.indexOf(IonSettings.chatLift());
+                return index < 0 ? CHAT_LIFTS.indexOf(60) : index;
+            }
+
+            @Override
+            public void select(int index) {
+                IonSettings.setChatLift(CHAT_LIFTS.get(index));
+            }
+        };
     }
 
     private static Choice desktopScale(double scale) {

@@ -5,15 +5,19 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [
+    "ChatScreenMixin",
     "ClientPacketListenerMixin",
     "CubeMapMixin",
     "DevAutoTestMixin",
     "DiscardedPayloadMixin",
+    "EditBoxMixin",
     "JoinMultiplayerScreenMixin",
+    "MinecraftScreenMixin",
     "OptionsScreenMixin",
     "ServerListMixin",
     "ServerSelectionListMixin",
-    "TitleScreenMixin"
+    "TitleScreenMixin",
+    "TypingScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

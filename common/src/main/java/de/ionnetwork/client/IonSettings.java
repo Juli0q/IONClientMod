@@ -40,6 +40,8 @@ public final class IonSettings {
     private static volatile boolean showCoins = true;
     private static volatile boolean pinServer = true;
     private static volatile boolean matchDesktopScale = true;
+    private static volatile String steamKeyboard = IonSteamKeyboard.AUTO;
+    private static volatile int chatLift = 60;
 
     private IonSettings() {
     }
@@ -80,6 +82,27 @@ public final class IonSettings {
         matchDesktopScale = value;
     }
 
+    /** {@link IonSteamKeyboard#AUTO}, {@link IonSteamKeyboard#ON} or {@link IonSteamKeyboard#OFF}. */
+    public static String steamKeyboard() {
+        return steamKeyboard;
+    }
+
+    public static void setSteamKeyboard(String value) {
+        steamKeyboard = value;
+    }
+
+    /**
+     * How much of the screen's height, in percent, the chat moves up while Steam's keyboard is
+     * docked over the bottom of the screen (see {@link IonSteamKeyboard#chatLift}).
+     */
+    public static int chatLift() {
+        return chatLift;
+    }
+
+    public static void setChatLift(int value) {
+        chatLift = value;
+    }
+
     /**
      * Reads {@code <configDir>/ionclient.json} and remembers it for {@link #save}. A missing file
      * is not an error: the defaults stay and the first save creates it.
@@ -104,6 +127,8 @@ public final class IonSettings {
         showCoins = bool(json, "showCoins", showCoins);
         pinServer = bool(json, "pinServer", pinServer);
         matchDesktopScale = bool(json, "matchDesktopScale", matchDesktopScale);
+        steamKeyboard = string(json, "steamKeyboard", steamKeyboard);
+        chatLift = integer(json, "chatLift", chatLift);
     }
 
     /** Writes the settings back to the file {@link #load} read. Does nothing before that. */
@@ -117,6 +142,8 @@ public final class IonSettings {
         json.addProperty("showCoins", showCoins);
         json.addProperty("pinServer", pinServer);
         json.addProperty("matchDesktopScale", matchDesktopScale);
+        json.addProperty("steamKeyboard", steamKeyboard);
+        json.addProperty("chatLift", chatLift);
 
         File dir = target.getParentFile();
         if (dir != null && !dir.isDirectory() && !dir.mkdirs()) {
@@ -134,6 +161,11 @@ public final class IonSettings {
     private static String string(JsonObject json, String key, String fallback) {
         JsonElement value = json.get(key);
         return value != null && value.isJsonPrimitive() && value.getAsJsonPrimitive().isString() ? value.getAsString() : fallback;
+    }
+
+    private static int integer(JsonObject json, String key, int fallback) {
+        JsonElement value = json.get(key);
+        return value != null && value.isJsonPrimitive() && value.getAsJsonPrimitive().isNumber() ? value.getAsInt() : fallback;
     }
 
     private static boolean bool(JsonObject json, String key, boolean fallback) {

@@ -23,6 +23,8 @@ public final class IonClient {
         } catch (IOException e) {
             LOGGER.warn("Could not read the ION Client settings; using the defaults", e);
         }
+        IonSteamKeyboard.setLog(LOGGER::info);
+        IonSteamKeyboard.logEnvironment();
         LOGGER.info("ION Client loaded on {} (Minecraft 1.21.1). Pinning {} to the server list.", loader, IonBrand.SERVER_ADDRESS);
     }
 }
