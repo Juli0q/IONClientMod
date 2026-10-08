@@ -36,7 +36,7 @@ public final class Lwjgl3Platform {
         xim = PlatformInfo.isXimEnabled(System.getProperty(XIM_PROPERTY));
         String imeMode = System.getProperty(WAYLAND_IME_PROPERTY, PlatformInfo.DEFAULT_WAYLAND_IME);
         backend = PlatformInfo.chooseBackend(System.getProperty(BACKEND_PROPERTY),
-                System.getenv(), xim, imeMode);
+                System.getProperty("os.name"), System.getenv(), xim, imeMode);
         xwaylandIme = PlatformInfo.isWayland(System.getenv()) && backend == PlatformInfo.Backend.X11
                 && PlatformInfo.parseBackend(System.getProperty(BACKEND_PROPERTY)) == PlatformInfo.Backend.AUTO;
         System.setProperty("lllllwjgl3.detectedBackend", backend.name().toLowerCase(Locale.ROOT));

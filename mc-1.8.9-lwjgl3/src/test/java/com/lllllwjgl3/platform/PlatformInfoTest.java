@@ -37,10 +37,26 @@ public class PlatformInfoTest {
         Map<String, String> env = new HashMap<String, String>();
         env.put("WAYLAND_DISPLAY", "wayland-0");
         env.put("DISPLAY", ":0");
-        assertEquals(PlatformInfo.Backend.X11, PlatformInfo.chooseBackend("x11", env));
-        assertEquals(PlatformInfo.Backend.WAYLAND, PlatformInfo.chooseBackend(null, env));
+        assertEquals(PlatformInfo.Backend.X11, PlatformInfo.chooseBackend("x11", "Linux", env));
+        assertEquals(PlatformInfo.Backend.WAYLAND, PlatformInfo.chooseBackend(null, "Linux", env));
         assertEquals(PlatformInfo.Backend.X11,
-                PlatformInfo.chooseBackend(null, env, true, "xwayland"));
+                PlatformInfo.chooseBackend(null, "Linux", env, true, "xwayland"));
+    }
+
+    @Test
+    public void onlyLinuxGetsAnExplicitGlfwPlatform() {
+        // GLFW on Windows and macOS has no X11 or Wayland platform, so hinting one makes glfwInit fail.
+        Map<String, String> env = new HashMap<String, String>();
+        env.put("WAYLAND_DISPLAY", "wayland-0");
+        assertEquals(PlatformInfo.Backend.AUTO,
+                PlatformInfo.chooseBackend(null, "Windows 10", Collections.<String, String>emptyMap()));
+        assertEquals(PlatformInfo.Backend.AUTO, PlatformInfo.chooseBackend("x11", "Windows 10", env));
+        assertEquals(PlatformInfo.Backend.AUTO, PlatformInfo.chooseBackend(null, "Mac OS X", env));
+        assertEquals(PlatformInfo.Backend.AUTO,
+                PlatformInfo.chooseBackend(null, "Mac OS X", env, true, "xwayland"));
+        assertEquals(PlatformInfo.Backend.X11,
+                PlatformInfo.chooseBackend(null, "Linux", Collections.<String, String>emptyMap()));
+        assertEquals(PlatformInfo.Backend.WAYLAND, PlatformInfo.chooseBackend(null, "Linux", env));
     }
 
     @Test

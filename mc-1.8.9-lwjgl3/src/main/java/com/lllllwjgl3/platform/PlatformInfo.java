@@ -56,8 +56,8 @@ public final class PlatformInfo {
         return Backend.AUTO;
     }
 
-    public static Backend chooseBackend(String requested, Map<String, String> environment) {
-        return chooseBackend(requested, environment, true, DEFAULT_WAYLAND_IME);
+    public static Backend chooseBackend(String requested, String osName, Map<String, String> environment) {
+        return chooseBackend(requested, osName, environment, true, DEFAULT_WAYLAND_IME);
     }
 
     /**
@@ -65,9 +65,14 @@ public final class PlatformInfo {
      * IME mode, AUTO therefore uses the XWayland surface when a Wayland session
      * exposes a DISPLAY socket. Fcitx5/IBus then talks to the GLFW X11 backend
      * through XIM and committed Unicode text reaches Keyboard's char callback.
+     *
+     * <p>X11 and Wayland only exist on Linux. GLFW on Windows and macOS has neither platform, and
+     * hinting one there makes {@code glfwInit} fail, so every other OS stays on AUTO and lets GLFW
+     * pick Win32 or Cocoa itself.
      */
-    public static Backend chooseBackend(String requested, Map<String, String> environment,
+    public static Backend chooseBackend(String requested, String osName, Map<String, String> environment,
             boolean ximEnabled, String waylandImeMode) {
+        if (detectOperatingSystem(osName) != OperatingSystem.LINUX) return Backend.AUTO;
         Backend parsed = parseBackend(requested);
         if (parsed != Backend.AUTO) return parsed;
         if (!isWayland(environment)) return Backend.X11;
