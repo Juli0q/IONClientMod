@@ -11,7 +11,7 @@ public final class IonClient {
 
     public static final String MOD_ID = "ionclient";
     /** Kept in step with mod_version in gradle.properties; the build checks the two agree. */
-    public static final String VERSION = "1.2.0-beta.2";
+    public static final String VERSION = "1.2.0-beta.3";
     public static final Logger LOGGER = LoggerFactory.getLogger("IONClient");
 
     private IonClient() {
