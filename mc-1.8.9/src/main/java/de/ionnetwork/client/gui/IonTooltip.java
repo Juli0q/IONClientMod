@@ -12,9 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Draws a hovering tooltip that always stays on screen. It looks like Forge's, but one too wide or too tall
- * for the screen is drawn smaller until it fits, and the box is pushed back inside every edge. Lines only
- * wrap when fitting the width would take the tooltip below half size.
+ * Draws a hovering tooltip that always stays on screen and never covers the cursor. It looks like Forge's,
+ * but one too wide or too tall for the screen is drawn smaller until it fits, and the box is pushed back
+ * inside every edge. It sits right of the cursor, or left, below or above when that side lacks room; when
+ * no side has room at full size, it shrinks into the roomiest one. Lines only wrap when fitting the width
+ * would take the tooltip below half size.
  */
 public final class IonTooltip {
 
@@ -23,6 +25,11 @@ public final class IonTooltip {
     /** The smallest a tooltip shrinks to fit the width; anything wider wraps at this size. */
     private static final float MIN_WIDTH_SCALE = 0.5F;
     private static final float Z = 300.0F;
+    /** How far the box keeps from the cursor's hotspot on each side, in screen units. */
+    private static final int CURSOR_RIGHT = 8;
+    private static final int CURSOR_LEFT = 12;
+    private static final int CURSOR_BELOW = 16;
+    private static final int CURSOR_ABOVE = 4;
 
     private IonTooltip() {
     }
@@ -53,17 +60,37 @@ public final class IonTooltip {
         if (lines.size() > 1) height += (lines.size() - 1) * 10;
         if (lines.size() > titleLines[0]) height += 2;
 
-        // Too tall: shrink it further. Placement below happens in the scaled coordinates.
+        // Too tall: shrink it further.
         scale = Math.min(scale, screenHeight / (float) (height + 2 * INSET));
+
+        // Never over the cursor: take the first side with room at this size, in the order right, left,
+        // below, above. Without one, take the roomiest side and shrink the tooltip to fit it.
+        int edge = INSET - 4;
+        float[] room = {
+                (screenWidth - mouseX - CURSOR_RIGHT - edge) / (float) (widest + 8),
+                (mouseX - CURSOR_LEFT - edge) / (float) (widest + 8),
+                (screenHeight - mouseY - CURSOR_BELOW - edge) / (float) (height + 8),
+                (mouseY - CURSOR_ABOVE - edge) / (float) (height + 8),
+        };
+        int side = 0;
+        for (int i = 1; i < room.length; i++) {
+            if (Math.min(room[i], scale) > Math.min(room[side], scale)) side = i;
+        }
+        if (room[side] > 0) scale = Math.min(scale, room[side]);
+
+        // Placement happens in the scaled coordinates; the cursor gaps stay in screen units.
         int width = (int) (screenWidth / scale);
         int bottom = (int) (screenHeight / scale);
         int mx = (int) (mouseX / scale);
         int my = (int) (mouseY / scale);
 
-        int x = mx + 12;
-        if (x + widest > width - INSET) x = mx - 16 - widest;
-        x = Math.max(INSET, Math.min(x, width - INSET - widest));
+        int x = mx;
         int y = my - 12;
+        if (side == 0) x = (int) Math.ceil((mouseX + CURSOR_RIGHT) / scale) + 4;
+        if (side == 1) x = (int) Math.floor((mouseX - CURSOR_LEFT) / scale) - 4 - widest;
+        if (side == 2) y = (int) Math.ceil((mouseY + CURSOR_BELOW) / scale) + 4;
+        if (side == 3) y = (int) Math.floor((mouseY - CURSOR_ABOVE) / scale) - 4 - height;
+        x = Math.max(INSET, Math.min(x, width - INSET - widest));
         y = Math.max(INSET, Math.min(y, bottom - INSET - height));
 
         GlStateManager.disableRescaleNormal();
