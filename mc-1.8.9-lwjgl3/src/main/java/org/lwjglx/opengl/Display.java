@@ -198,6 +198,17 @@ public final class Display {
         }
     }
 
+    /**
+     * Forge calls this on Windows only, from FMLClientHandler.processWindowMessages while mods load, so the
+     * window keeps answering the OS. Like LWJGL2 it pumps events and input without swapping buffers.
+     */
+    public static void processMessages() {
+        if (!isCreated()) throw new IllegalStateException("Display not created");
+        InputDiagnostics.pollEvents();
+        if (Mouse.isCreated()) Mouse.poll();
+        if (Keyboard.isCreated()) Keyboard.poll();
+    }
+
     public static void create(PixelFormat pixelFormat) throws LWJGLException {
         DisplayCompat.checkNotCreated(handle);
         GLFWErrorCallback.createPrint(System.err).set();
